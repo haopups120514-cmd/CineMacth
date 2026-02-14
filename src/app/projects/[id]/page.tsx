@@ -1,0 +1,237 @@
+"use client";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Banknote,
+  FileText,
+  Users,
+} from "lucide-react";
+import PageBackground from "@/components/PageBackground";
+import TagBadge from "@/components/TagBadge";
+import { mockProjects } from "@/data/mock-projects";
+
+export default function ProjectDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const project = mockProjects.find((p) => p.id === id);
+  const [showToast, setShowToast] = useState(false);
+
+  if (!project) {
+    return (
+      <section className="relative min-h-screen">
+        <PageBackground />
+        <div className="relative z-10 flex min-h-screen items-center justify-center">
+          <p className="text-neutral-400">未找到该项目</p>
+        </div>
+      </section>
+    );
+  }
+
+  const formatDate = (d: string) => d.replace(/-/g, ".");
+  const openPositions = project.positions.filter((p) => p.filled < p.count);
+
+  const handleApply = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  return (
+    <section className="relative min-h-screen">
+      <PageBackground />
+
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-12">
+        {/* 返回 */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            返回通告板
+          </Link>
+        </motion.div>
+
+        {/* 标题区域 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mt-8"
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-extrabold text-white md:text-4xl">
+              {project.title}
+            </h1>
+            <TagBadge text={project.type} variant="accent" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-2.5 py-0.5 text-xs text-green-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+              {project.status}
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-neutral-500">
+            导演：{project.director} · {formatDate(project.createdAt)} 发布
+          </p>
+        </motion.div>
+
+        {/* 主布局 */}
+        <div className="mt-8 flex flex-col gap-8 lg:flex-row">
+          {/* 左栏 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+            className="flex-1"
+          >
+            {/* 项目简介 */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+              <h2 className="text-lg font-bold text-white">项目简介</h2>
+              <p className="mt-3 text-sm leading-relaxed text-neutral-300">
+                {project.description}
+              </p>
+            </div>
+
+            {/* 剧本大纲 */}
+            {project.synopsis && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-[#5CC8D6]" />
+                  <h2 className="text-lg font-bold text-white">剧本大纲</h2>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-300">
+                  {project.synopsis}
+                </p>
+              </div>
+            )}
+
+            {/* 拍摄信息 */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-neutral-500">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs">拍摄日期</span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {formatDate(project.shootingDateStart)} -{" "}
+                  {formatDate(project.shootingDateEnd)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-neutral-500">
+                  <MapPin className="h-4 w-4" />
+                  <span className="text-xs">拍摄地点</span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {project.location}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-neutral-500">
+                  <Banknote className="h-4 w-4" />
+                  <span className="text-xs">报酬方式</span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {project.compensation}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 text-neutral-500">
+                  <Users className="h-4 w-4" />
+                  <span className="text-xs">项目类型</span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {project.type}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* 右栏：招募职位 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+            className="w-full lg:w-72 shrink-0"
+          >
+            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+              <h2 className="text-lg font-bold text-white">招募职位</h2>
+
+              <div className="mt-4 flex flex-col gap-3">
+                {project.positions.map((pos) => {
+                  const isFull = pos.filled >= pos.count;
+                  return (
+                    <div
+                      key={pos.title}
+                      className="flex items-center justify-between"
+                    >
+                      <span
+                        className={`text-sm ${
+                          isFull
+                            ? "text-neutral-600 line-through"
+                            : "text-white"
+                        }`}
+                      >
+                        {pos.title}
+                      </span>
+                      <span
+                        className={`text-xs ${
+                          isFull ? "text-neutral-600" : "text-[#5CC8D6]"
+                        }`}
+                      >
+                        {pos.filled}/{pos.count}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {openPositions.length > 0 && (
+                <p className="mt-3 text-xs text-neutral-500">
+                  还需 {openPositions.reduce((sum, p) => sum + (p.count - p.filled), 0)} 人
+                </p>
+              )}
+
+              {/* 标签 */}
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {project.tags.map((tag) => (
+                  <TagBadge key={tag} text={tag} variant="muted" />
+                ))}
+              </div>
+
+              {/* 申请加入 */}
+              <button
+                onClick={handleApply}
+                className="mt-6 w-full rounded-xl bg-[#5CC8D6] py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] cursor-pointer"
+              >
+                申请加入
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 right-8 z-50 rounded-xl border border-white/15 bg-white/10 px-6 py-3 text-sm text-white backdrop-blur-md"
+          >
+            功能开发中，敬请期待
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
