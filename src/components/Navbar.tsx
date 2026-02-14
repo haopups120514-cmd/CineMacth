@@ -55,9 +55,9 @@ export default function Navbar() {
                   }}
                 />
               </div>
-              {/* 邮箱昵称 */}
+              {/* 显示名称或邮箱 */}
               <span className="text-sm text-[#5CC8D6] hover:text-[#7AD4DF] transition-colors hidden sm:inline">
-                {user.email?.split("@")[0]}
+                {userProfile?.display_name || user.email?.split("@")[0]}
               </span>
             </Link>
             <button

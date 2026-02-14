@@ -19,11 +19,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- 2. 启用 RLS（行级安全）
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
--- 3. 创建 RLS 策略 - 用户只能读取和更新自己的数据
-CREATE POLICY "Users can view their own profile"
+-- 3. 创建 RLS 策略 - 用户只能读取和更新自己的数据，但所有人可以查看公开资料
+CREATE POLICY "Users can view all profiles"
   ON public.profiles
   FOR SELECT
-  USING (auth.uid() = id);
+  USING (true);
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles
