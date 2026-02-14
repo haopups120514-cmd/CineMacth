@@ -102,8 +102,8 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero 区域 */}
-      <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
+      {/* Hero 区域 — 缩短高度让用户看到下方内容 */}
+      <section className="relative flex min-h-[65vh] items-center justify-center overflow-hidden">
         {/* 背景渐变 */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#111318] to-[#050505]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(92,200,214,0.12)_0%,transparent_70%)]" />
@@ -168,6 +168,24 @@ export default function Home() {
               </div>
             </motion.div>
           )}
+
+          {/* 滚动提示 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+            className="mt-10 flex flex-col items-center gap-1 text-neutral-500"
+          >
+            <span className="text-xs">下滑查看招聘信息</span>
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
