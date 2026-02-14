@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
-  { label: "找团队", href: "/find-crew" },
-  { label: "项目", href: "/projects" },
+  { label: "人才库", href: "/find-crew" },
+  { label: "机会广场", href: "/projects" },
   { label: "关于", href: "/about" },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clapperboard, Camera } from "lucide-react";
+import { Users, Megaphone } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -40,13 +40,13 @@ export default function Home() {
           className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-6 md:mt-14"
         >
           <Link href="/find-crew" className="group flex items-center gap-3 rounded-xl bg-[#5CC8D6] px-8 py-4 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] hover:shadow-lg hover:shadow-[#5CC8D6]/25">
-            <Clapperboard className="h-5 w-5 transition-transform group-hover:scale-110" />
-            我需要创作者
+            <Users className="h-5 w-5 transition-transform group-hover:scale-110" />
+            浏览人才库
           </Link>
 
           <Link href="/projects" className="group flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/25">
-            <Camera className="h-5 w-5 transition-transform group-hover:scale-110" />
-            我正在寻找团队
+            <Megaphone className="h-5 w-5 transition-transform group-hover:scale-110" />
+            机会广场
           </Link>
         </motion.div>
       </div>
