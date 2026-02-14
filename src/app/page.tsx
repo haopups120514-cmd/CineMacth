@@ -1,10 +1,30 @@
 "use client";
 
+import { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Users, Megaphone } from "lucide-react";
 import Link from "next/link";
+import { AuthContext } from "@/contexts/AuthContext";
 
 export default function Home() {
+  const { session, loading } = useContext(AuthContext);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && session) {
+      router.push("/dashboard");
+    }
+  }, [session, loading, router]);
+
+  if (loading || session) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center">
+        <div className="text-white">Redirecting...</div>
+      </div>
+    );
+  }
+
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* 背景渐变 */}
@@ -41,12 +61,12 @@ export default function Home() {
         >
           <Link href="/find-crew" className="group flex items-center gap-3 rounded-xl bg-[#5CC8D6] px-8 py-4 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] hover:shadow-lg hover:shadow-[#5CC8D6]/25">
             <Users className="h-5 w-5 transition-transform group-hover:scale-110" />
-            浏览人才库
+            招募创作伙伴
           </Link>
 
           <Link href="/projects" className="group flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/25">
             <Megaphone className="h-5 w-5 transition-transform group-hover:scale-110" />
-            机会广场
+            加入拍摄计划
           </Link>
         </motion.div>
       </div>

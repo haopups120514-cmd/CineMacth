@@ -246,16 +246,38 @@ export default function AboutPage() {
               href="/find-crew"
               className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
             >
-              浏览人才库
+              招募创作伙伴
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/projects"
               className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
             >
-              查看机会广场
+              加入拍摄计划
             </Link>
           </div>
+        </motion.div>
+
+        {/* ===== Contact Section ===== */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1 }}
+          className="mt-24 rounded-2xl border border-white/10 bg-white/5 p-8 text-center md:p-12"
+        >
+          <h2 className="text-2xl font-extrabold text-white">
+            联系我
+          </h2>
+          <p className="mt-3 text-base text-neutral-400">
+            有任何想法或建议？欢迎直接发送邮件
+          </p>
+          <a
+            href="mailto:haopups120514@gmaail.com"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
+          >
+            <span>haopups120514@gmaail.com</span>
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </motion.div>
 
         {/* 底部留白 */}

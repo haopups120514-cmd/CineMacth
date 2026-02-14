@@ -37,7 +37,7 @@ export default function FindCrewPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-4xl font-extrabold text-white md:text-5xl"
         >
-          人才库
+          招募创作伙伴
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}

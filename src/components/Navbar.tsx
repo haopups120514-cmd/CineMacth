@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
-  { label: "人才库", href: "/find-crew" },
+  { label: "人才库", href: "/crew" },
   { label: "机会广场", href: "/projects" },
   { label: "关于", href: "/about" },
 ];
@@ -40,9 +40,12 @@ export default function Navbar() {
 
         {!loading && user && (
           <div className="flex items-center gap-4">
-            <span className="text-sm text-[#5CC8D6]">
+            <Link
+              href="/profile"
+              className="text-sm text-[#5CC8D6] hover:text-[#7AD4DF] transition-colors flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5"
+            >
               {user.email?.split("@")[0]}
-            </span>
+            </Link>
             <button
               onClick={signOut}
               className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors cursor-pointer"

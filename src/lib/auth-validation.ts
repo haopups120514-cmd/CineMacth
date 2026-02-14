@@ -7,8 +7,17 @@ const ALLOWED_DOMAINS = [
   ".ac.kr",  // 韩国大学
 ];
 
+// 测试账户白名单
+const WHITELIST_EMAILS = [
+  "haopups120514@gmail.com",
+];
+
 export function isStudentEmail(email: string): boolean {
   const normalized = email.toLowerCase().trim();
+
+  // 检查白名单
+  if (WHITELIST_EMAILS.includes(normalized)) return true;
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(normalized)) return false;
   return ALLOWED_DOMAINS.some((domain) => normalized.endsWith(domain));
