@@ -52,14 +52,22 @@ export default function DashboardPage() {
           transition={{ duration: 0.6 }}
           className="mb-12"
         >
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex-1">
               <h1 className="text-3xl font-extrabold text-white md:text-4xl">
                 欢迎回来！
               </h1>
               <p className="mt-2 text-lg text-neutral-400">
                 {user?.email}
               </p>
+            </div>
+            {/* 头像显示 */}
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl border border-[#5CC8D6]/30 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <img
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
+                alt={user?.email || "用户"}
+                className="w-full h-full object-cover"
+              />
             </div>
             <button
               onClick={handleSignOut}

@@ -1,29 +1,13 @@
 "use client";
 
-import { useContext, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useContext } from "react";
 import { motion } from "framer-motion";
 import { Users, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { AuthContext } from "@/contexts/AuthContext";
 
 export default function Home() {
-  const { session, loading } = useContext(AuthContext);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && session) {
-      router.push("/dashboard");
-    }
-  }, [session, loading, router]);
-
-  if (loading || session) {
-    return (
-      <div className="relative min-h-screen flex items-center justify-center">
-        <div className="text-white">Redirecting...</div>
-      </div>
-    );
-  }
+  const { session } = useContext(AuthContext);
 
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
