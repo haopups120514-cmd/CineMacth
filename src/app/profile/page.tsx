@@ -4,12 +4,19 @@ import { useContext, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ChevronLeft, Save, AlertCircle, Upload } from "lucide-react";
+import { ChevronLeft, Save, AlertCircle, Upload, Edit2 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
 import PageBackground from "@/components/PageBackground";
 import { supabase } from "@/lib/supabase";
+import {
+  generateRandomUsername,
+  isValidUsername,
+  canChangeUsername,
+  getNextChangeDate,
+} from "@/lib/username-generator";
 
 interface ProfileFormData {
+  username: string;
   fullName: string;
   displayName: string;
   bio: string;
@@ -32,7 +39,7 @@ const AVAILABLE_STYLES = [
 ];
 
 export default function ProfilePage() {
-  const { user, session, loading } = useContext(AuthContext);
+  const { user, session, loading, userProfile } = useContext(AuthContext);
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,8 +48,13 @@ export default function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState("");
+  const [canChangeUsernameFlag, setCanChangeUsernameFlag] = useState(true);
+  const [nextChangeDate, setNextChangeDate] = useState<Date | null>(null);
 
   const [formData, setFormData] = useState<ProfileFormData>({
+    username: "",
     fullName: "",
     displayName: "",
     bio: "",
@@ -71,12 +83,12 @@ export default function ProfilePage() {
         .single();
 
       if (error && error.code !== "PGRST116") {
-        // PGRST116 是 "no rows found" 错误，这是正常的
         throw error;
       }
 
       if (data) {
         setFormData({
+          username: data.username || "",
           fullName: data.full_name || "",
           displayName: data.display_name || "",
           bio: data.bio || "",
@@ -88,16 +100,30 @@ export default function ProfilePage() {
         if (data.avatar_url) {
           setAvatarPreview(data.avatar_url);
         }
+        // 检查用户名修改权限
+        if (data.username_changed_at) {
+          const canChange = canChangeUsername(data.username_changed_at);
+          setCanChangeUsernameFlag(canChange);
+          if (!canChange) {
+            setNextChangeDate(getNextChangeDate(data.username_changed_at));
+          }
+        }
+      } else {
+        // 新用户：生成随机用户名
+        const randomUsername = generateRandomUsername();
+        setFormData((prev) => ({
+          ...prev,
+          username: randomUsername,
+        }));
       }
     } catch (error: any) {
       console.error("加载资料失败:", error);
-      // 忽略"no rows found"错误，这是正常的（新用户）
       if (error?.code !== "PGRST116") {
         console.error("完整错误信息:", {
           message: error?.message,
           code: error?.code,
           status: error?.status,
-          hint: error?.hint
+          hint: error?.hint,
         });
       }
     } finally {
@@ -138,6 +164,22 @@ export default function ProfilePage() {
     setSaveStatus("saving");
     setErrorMessage("");
 
+    // 如果编辑用户名，验证
+    if (isEditingUsername) {
+      const usernameError = isValidUsername(formData.username);
+      if (usernameError) {
+        setUsernameError(usernameError);
+        setSaveStatus("error");
+        setErrorMessage(usernameError);
+        return;
+      }
+      if (!canChangeUsernameFlag) {
+        setSaveStatus("error");
+        setErrorMessage("用户名修改已达上限，请在30天后重试");
+        return;
+      }
+    }
+
     try {
       let avatar_url = formData.avatar_url;
 
@@ -159,8 +201,8 @@ export default function ProfilePage() {
         avatar_url = publicUrlData.publicUrl;
       }
 
-      // 保存到 profiles 表
-      const { error: saveError } = await supabase.from("profiles").upsert({
+      // 特殊处理：如果用户名被修改，记录修改时间
+      const updateData: any = {
         id: user?.id,
         email: user?.email,
         full_name: formData.fullName,
@@ -171,11 +213,23 @@ export default function ProfilePage() {
         styles: formData.styles,
         avatar_url: avatar_url || null,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      if (isEditingUsername) {
+        updateData.username = formData.username;
+        updateData.username_changed_at = new Date().toISOString();
+      } else if (formData.username) {
+        updateData.username = formData.username;
+      }
+
+      const { error: saveError } = await supabase
+        .from("profiles")
+        .upsert(updateData);
 
       if (saveError) throw saveError;
 
       setSaveStatus("success");
+      setIsEditingUsername(false);
       setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
@@ -296,6 +350,77 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* 用户名 */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-neutral-300">
+                个人链接
+              </label>
+              {!isEditingUsername && (
+                <button
+                  onClick={() => {
+                    if (canChangeUsernameFlag) {
+                      setIsEditingUsername(true);
+                      setUsernameError("");
+                    }
+                  }}
+                  disabled={!canChangeUsernameFlag}
+                  className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded transition-all ${
+                    canChangeUsernameFlag
+                      ? "text-[#5CC8D6] hover:bg-[#5CC8D6]/10 cursor-pointer"
+                      : "text-neutral-600 cursor-not-allowed"
+                  }`}
+                >
+                  <Edit2 className="h-3 w-3" />
+                  修改
+                </button>
+              )}
+            </div>
+
+            {isEditingUsername ? (
+              <div>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <div className="text-xs text-neutral-400 mb-2">
+                      cinematch.com/user/
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.username}
+                      onChange={(e) => {
+                        const val = e.target.value.toLowerCase();
+                        setFormData((prev) => ({ ...prev, username: val }));
+                        setUsernameError("");
+                      }}
+                      placeholder="你的个人链接名"
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder-neutral-600 focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
+                    />
+                    {usernameError && (
+                      <p className="mt-1 text-xs text-red-400">{usernameError}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setIsEditingUsername(false)}
+                    className="px-3 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors"
+                  >
+                    取消
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-base text-white font-mono">
+                  cinematch.com/user/{formData.username}
+                </p>
+                {!canChangeUsernameFlag && nextChangeDate && (
+                  <p className="mt-2 text-xs text-neutral-500">
+                    下次修改时间：{nextChangeDate.toLocaleDateString("zh-CN")}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* 当前邮箱 */}

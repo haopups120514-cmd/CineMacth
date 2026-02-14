@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
+  username TEXT UNIQUE,
   full_name TEXT,
   display_name TEXT,
   bio TEXT,
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   equipment TEXT,
   styles TEXT[] DEFAULT '{}',
   avatar_url TEXT,
+  username_changed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );

@@ -10,7 +10,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, userProfile } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-black/40 backdrop-blur-md border-b border-white/10">

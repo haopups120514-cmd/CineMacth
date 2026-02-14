@@ -10,6 +10,7 @@ import PageBackground from "@/components/PageBackground";
 
 interface UserProfile {
   id: string;
+  username: string;
   display_name: string;
   full_name: string;
   bio: string;
@@ -21,7 +22,7 @@ interface UserProfile {
 
 export default function UserProfilePage() {
   const params = useParams();
-  const userId = params.id as string;
+  const username = params.id as string;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export default function UserProfilePage() {
         const { data, error: fetchError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", userId)
+          .eq("username", username)
           .single();
 
         if (fetchError) {
@@ -52,7 +53,7 @@ export default function UserProfilePage() {
     };
 
     loadProfile();
-  }, [userId]);
+  }, [username]);
 
   if (loading) {
     return (

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import type { User, Session } from "@supabase/supabase-js";
 
 type UserProfile = {
+  username?: string;
   display_name?: string;
   avatar_url?: string;
   full_name?: string;
@@ -12,6 +13,7 @@ type UserProfile = {
   role?: string;
   equipment?: string;
   styles?: string[];
+  username_changed_at?: string;
 };
 
 type AuthContextType = {
@@ -41,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, avatar_url, full_name, bio, role, equipment, styles")
+        .select("username, display_name, avatar_url, full_name, bio, role, equipment, styles, username_changed_at")
         .eq("id", userId)
         .single();
 
