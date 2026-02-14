@@ -55,11 +55,37 @@ export interface DbRecruitment {
   location: string;
   compensation: string;
   shoot_date: string;
-  status: string;
+  status: string; // 招募中 / 已招到 / 拍摄中 / 已完成
   created_at: string;
   updated_at: string;
   // 关联
   poster?: DbProfile;
+}
+
+export interface DbApplication {
+  id: string;
+  recruitment_id: string;
+  applicant_id: string;
+  message: string;
+  status: string; // 待处理 / 已接受 / 已拒绝
+  created_at: string;
+  updated_at: string;
+  // 关联
+  applicant?: DbProfile;
+  recruitment?: DbRecruitment;
+}
+
+export interface DbReview {
+  id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  recruitment_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  // 关联
+  reviewer?: DbProfile;
+  recruitment?: DbRecruitment;
 }
 
 export interface ConversationPreview {
@@ -716,4 +742,338 @@ export async function updateRecruitmentStatus(id: string, status: string): Promi
   }
 
   return true;
+}
+
+/**
+ * 获取所有招聘信息（包含所有状态，用于计划页）
+ */
+export async function fetchAllRecruitments(): Promise<(DbRecruitment & { poster?: DbProfile })[]> {
+  const { data, error } = await supabase
+    .from("recruitments")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("获取全部招聘信息失败:", error);
+    return [];
+  }
+
+  const userIds = [...new Set(data.map((r) => r.user_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("id", userIds);
+
+  const profileMap = new Map<string, DbProfile>();
+  (profiles || []).forEach((p: DbProfile) => profileMap.set(p.id, p));
+
+  return data.map((r) => ({
+    ...r,
+    poster: profileMap.get(r.user_id) || undefined,
+  }));
+}
+
+// ==================== 招聘申请 ====================
+
+/**
+ * 申请招聘
+ */
+export async function applyToRecruitment(
+  recruitmentId: string,
+  applicantId: string,
+  message: string = ""
+): Promise<DbApplication | null> {
+  const { data, error } = await supabase
+    .from("recruitment_applications")
+    .insert({
+      recruitment_id: recruitmentId,
+      applicant_id: applicantId,
+      message,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("申请招聘失败:", error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * 获取某条招聘的所有申请
+ */
+export async function fetchApplicationsByRecruitment(
+  recruitmentId: string
+): Promise<(DbApplication & { applicant?: DbProfile })[]> {
+  const { data, error } = await supabase
+    .from("recruitment_applications")
+    .select("*")
+    .eq("recruitment_id", recruitmentId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("获取申请列表失败:", error);
+    return [];
+  }
+
+  const applicantIds = [...new Set(data.map((a) => a.applicant_id))];
+  if (applicantIds.length === 0) return data;
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("id", applicantIds);
+
+  const profileMap = new Map<string, DbProfile>();
+  (profiles || []).forEach((p: DbProfile) => profileMap.set(p.id, p));
+
+  return data.map((a) => ({
+    ...a,
+    applicant: profileMap.get(a.applicant_id) || undefined,
+  }));
+}
+
+/**
+ * 获取用户的所有申请（我申请的）
+ */
+export async function fetchMyApplications(
+  userId: string
+): Promise<(DbApplication & { recruitment?: DbRecruitment & { poster?: DbProfile } })[]> {
+  const { data, error } = await supabase
+    .from("recruitment_applications")
+    .select("*")
+    .eq("applicant_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("获取我的申请失败:", error);
+    return [];
+  }
+
+  // 获取对应的招聘信息
+  const recruitmentIds = [...new Set(data.map((a) => a.recruitment_id))];
+  if (recruitmentIds.length === 0) return data;
+
+  const { data: recruitments } = await supabase
+    .from("recruitments")
+    .select("*")
+    .in("id", recruitmentIds);
+
+  const recruitmentMap = new Map<string, DbRecruitment>();
+  const posterIds = new Set<string>();
+  (recruitments || []).forEach((r: DbRecruitment) => {
+    recruitmentMap.set(r.id, r);
+    posterIds.add(r.user_id);
+  });
+
+  // 获取发布者信息
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("id", Array.from(posterIds));
+
+  const profileMap = new Map<string, DbProfile>();
+  (profiles || []).forEach((p: DbProfile) => profileMap.set(p.id, p));
+
+  return data.map((a) => {
+    const rec = recruitmentMap.get(a.recruitment_id);
+    return {
+      ...a,
+      recruitment: rec
+        ? { ...rec, poster: profileMap.get(rec.user_id) || undefined }
+        : undefined,
+    };
+  });
+}
+
+/**
+ * 更新申请状态（接受/拒绝）
+ */
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: string
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("recruitment_applications")
+    .update({ status })
+    .eq("id", applicationId);
+
+  if (error) {
+    console.error("更新申请状态失败:", error);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 检查用户是否已申请某招聘
+ */
+export async function checkIfApplied(
+  recruitmentId: string,
+  applicantId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("recruitment_applications")
+    .select("id")
+    .eq("recruitment_id", recruitmentId)
+    .eq("applicant_id", applicantId)
+    .limit(1);
+
+  return (data && data.length > 0) || false;
+}
+
+// ==================== 评分系统 ====================
+
+/**
+ * 提交评分
+ */
+export async function submitReview(item: {
+  reviewer_id: string;
+  reviewee_id: string;
+  recruitment_id: string;
+  rating: number;
+  comment?: string;
+}): Promise<DbReview | null> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .insert(item)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("提交评分失败:", error);
+    return null;
+  }
+
+  // 更新被评分者的信用分（根据评分调整）
+  await updateCreditScore(item.reviewee_id);
+
+  return data;
+}
+
+/**
+ * 获取用户收到的评分
+ */
+export async function fetchUserReviews(
+  userId: string
+): Promise<(DbReview & { reviewer?: DbProfile; recruitment?: DbRecruitment })[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("reviewee_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("获取评分失败:", error);
+    return [];
+  }
+
+  // 获取评分者信息和招聘信息
+  const reviewerIds = [...new Set(data.map((r) => r.reviewer_id))];
+  const recruitmentIds = [...new Set(data.map((r) => r.recruitment_id))];
+
+  const [profilesRes, recruitmentsRes] = await Promise.all([
+    supabase.from("profiles").select("*").in("id", reviewerIds),
+    supabase.from("recruitments").select("*").in("id", recruitmentIds),
+  ]);
+
+  const profileMap = new Map<string, DbProfile>();
+  (profilesRes.data || []).forEach((p: DbProfile) => profileMap.set(p.id, p));
+
+  const recruitmentMap = new Map<string, DbRecruitment>();
+  (recruitmentsRes.data || []).forEach((r: DbRecruitment) => recruitmentMap.set(r.id, r));
+
+  return data.map((r) => ({
+    ...r,
+    reviewer: profileMap.get(r.reviewer_id) || undefined,
+    recruitment: recruitmentMap.get(r.recruitment_id) || undefined,
+  }));
+}
+
+/**
+ * 检查是否已评分
+ */
+export async function checkIfReviewed(
+  reviewerId: string,
+  revieweeId: string,
+  recruitmentId: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("reviews")
+    .select("id")
+    .eq("reviewer_id", reviewerId)
+    .eq("reviewee_id", revieweeId)
+    .eq("recruitment_id", recruitmentId)
+    .limit(1);
+
+  return (data && data.length > 0) || false;
+}
+
+/**
+ * 检查用户是否有资格评分（必须是已完成招聘的参与者）
+ */
+export async function canReview(
+  reviewerId: string,
+  revieweeId: string,
+  recruitmentId: string
+): Promise<boolean> {
+  // 获取招聘信息
+  const { data: recruitment } = await supabase
+    .from("recruitments")
+    .select("user_id, status")
+    .eq("id", recruitmentId)
+    .single();
+
+  if (!recruitment || recruitment.status !== "已完成") return false;
+
+  const isOwner = recruitment.user_id === reviewerId;
+  const isRevieweeOwner = recruitment.user_id === revieweeId;
+
+  if (isOwner) {
+    // 招聘发布者评价已接受的申请人
+    const { data } = await supabase
+      .from("recruitment_applications")
+      .select("id")
+      .eq("recruitment_id", recruitmentId)
+      .eq("applicant_id", revieweeId)
+      .eq("status", "已接受")
+      .limit(1);
+    return (data && data.length > 0) || false;
+  } else if (isRevieweeOwner) {
+    // 申请人评价招聘发布者
+    const { data } = await supabase
+      .from("recruitment_applications")
+      .select("id")
+      .eq("recruitment_id", recruitmentId)
+      .eq("applicant_id", reviewerId)
+      .eq("status", "已接受")
+      .limit(1);
+    return (data && data.length > 0) || false;
+  }
+
+  return false;
+}
+
+/**
+ * 更新用户信用分（基于收到的评分平均值）
+ */
+async function updateCreditScore(userId: string): Promise<void> {
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("reviewee_id", userId);
+
+  if (!reviews || reviews.length === 0) return;
+
+  const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  // 信用分 = 基础60 + 评分均值 * 8 (最高100)
+  const creditScore = Math.min(100, Math.round(60 + avg * 8));
+
+  await supabase
+    .from("profiles")
+    .update({ credit_score: creditScore })
+    .eq("id", userId);
 }

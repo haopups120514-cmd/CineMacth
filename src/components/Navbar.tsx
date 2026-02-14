@@ -9,6 +9,7 @@ import { getUnreadCount } from "@/lib/database";
 const navLinks = [
   { label: "人才库", href: "/crew" },
   { label: "机会广场", href: "/projects" },
+  { label: "计划", href: "/plans" },
   { label: "关于", href: "/about" },
 ];
 

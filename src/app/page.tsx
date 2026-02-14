@@ -15,6 +15,7 @@ import {
   X,
   Trash2,
   User,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { AuthContext } from "@/contexts/AuthContext";
@@ -22,6 +23,8 @@ import {
   fetchRecruitments,
   createRecruitment,
   deleteRecruitment,
+  applyToRecruitment,
+  checkIfApplied,
   getDisplayName,
   getAvatarUrl,
   formatRelativeTime,
@@ -36,6 +39,8 @@ export default function Home() {
   const [showPostForm, setShowPostForm] = useState(false);
   const [posting, setPosting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [postError, setPostError] = useState("");
   const [postForm, setPostForm] = useState({
     title: "",
@@ -50,8 +55,19 @@ export default function Home() {
     setLoadingRecruitments(true);
     const data = await fetchRecruitments();
     setRecruitments(data);
+    // 检查已申请的招聘
+    if (user) {
+      const applied = new Set<string>();
+      for (const r of data) {
+        if (r.user_id !== user.id) {
+          const isApplied = await checkIfApplied(r.id, user.id);
+          if (isApplied) applied.add(r.id);
+        }
+      }
+      setAppliedIds(applied);
+    }
     setLoadingRecruitments(false);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadRecruitments();
@@ -100,106 +116,120 @@ export default function Home() {
     setDeletingId(null);
   };
 
+  const handleApply = async (recruitmentId: string) => {
+    if (!user) return;
+    setApplyingId(recruitmentId);
+    const result = await applyToRecruitment(recruitmentId, user.id);
+    if (result) {
+      setAppliedIds((prev) => new Set(prev).add(recruitmentId));
+    }
+    setApplyingId(null);
+  };
+
   return (
-    <div>
-      {/* Hero 区域 — 缩短高度让用户看到下方内容 */}
-      <section className="relative flex min-h-[65vh] items-center justify-center overflow-hidden">
-        {/* 背景渐变 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#111318] to-[#050505]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(92,200,214,0.12)_0%,transparent_70%)]" />
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#111318] to-[#050505]">
+      {/* 背景 */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,rgba(92,200,214,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-        {/* 内容 */}
-        <div className="relative z-10 flex flex-col items-center px-6 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl"
-          >
-            找到你的
-            <br />
-            <span className="text-[#5CC8D6]">创作伙伴</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            className="mt-6 max-w-xl text-lg text-neutral-400 sm:text-xl md:mt-8 md:text-2xl"
-          >
-            连接东京学生电影创作者的平台
-          </motion.p>
-
+      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-24 pb-16">
+        {/* ========== iOS 小组件风格 Hero ========== */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* 主卡片 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-            className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-6 md:mt-14"
+            transition={{ duration: 0.5 }}
+            className="sm:col-span-2 lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-6 flex flex-col justify-between"
           >
-            <Link href="/find-crew" className="group flex items-center gap-3 rounded-xl bg-[#5CC8D6] px-8 py-4 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] hover:shadow-lg hover:shadow-[#5CC8D6]/25">
-              <Users className="h-5 w-5 transition-transform group-hover:scale-110" />
-              招募创作伙伴
-            </Link>
-
-            <Link href="/projects" className="group flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/25">
-              <Megaphone className="h-5 w-5 transition-transform group-hover:scale-110" />
-              加入拍摄计划
-            </Link>
+            <div>
+              <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
+                找到你的<span className="text-[#5CC8D6]">创作伙伴</span>
+              </h1>
+              <p className="mt-2 text-sm text-neutral-400">
+                连接东京学生电影创作者的平台
+              </p>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/find-crew" className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
+                <Users className="h-4 w-4" />
+                招募伙伴
+              </Link>
+              <Link href="/projects" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
+                <Megaphone className="h-4 w-4" />
+                通告板
+              </Link>
+              <Link href="/plans" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
+                <ClipboardList className="h-4 w-4" />
+                我的计划
+              </Link>
+            </div>
           </motion.div>
 
-          {/* 登录后显示快捷入口 */}
-          {session && (
+          {/* 快捷入口卡片 */}
+          {session ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-              className="mt-8 flex items-center gap-4"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 flex flex-col justify-between"
             >
-              <Link
-                href="/messages"
-                className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-neutral-300 hover:bg-white/10 transition-all"
-              >
-                <MessageCircle className="h-4 w-4 text-[#5CC8D6]" />
-                我的私信
-              </Link>
-              <div className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-2 text-sm text-neutral-300">
-                <Shield className="h-4 w-4 text-amber-400" />
-                信用分 {userProfile?.credit_score ?? 80}
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src={userProfile?.avatar_url || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
+                  alt=""
+                  className="h-10 w-10 rounded-full bg-neutral-800 border border-white/10"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {userProfile?.display_name || user?.email?.split("@")[0]}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-amber-400">
+                    <Shield className="h-3 w-3" />
+                    信用分 {userProfile?.credit_score ?? 80}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/messages"
+                  className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/10 transition-all w-full"
+                >
+                  <MessageCircle className="h-3.5 w-3.5 text-[#5CC8D6]" />
+                  我的私信
+                </Link>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/10 transition-all w-full"
+                >
+                  <User className="h-3.5 w-3.5 text-[#5CC8D6]" />
+                  编辑资料
+                </Link>
               </div>
             </motion.div>
-          )}
-
-          {/* 滚动提示 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 1 }}
-            className="mt-10 flex flex-col items-center gap-1 text-neutral-500"
-          >
-            <span className="text-xs">下滑查看招聘信息</span>
+          ) : (
             <motion.div
-              animate={{ y: [0, 6, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 flex flex-col items-center justify-center text-center"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
+              <Shield className="h-8 w-8 text-[#5CC8D6] mb-3" />
+              <p className="text-sm text-neutral-400 mb-3">登录后解锁全部功能</p>
+              <Link href="/login" className="rounded-xl bg-[#5CC8D6] px-5 py-2 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
+                登录 / 注册
+              </Link>
             </motion.div>
-          </motion.div>
+          )}
         </div>
-      </section>
 
-      {/* 招聘信息模块 */}
-      <section className="relative bg-gradient-to-b from-[#050505] via-[#0a0a0a] to-[#050505]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(92,200,214,0.06)_0%,transparent_60%)]" />
-
-        <div className="relative z-10 mx-auto max-w-5xl px-6 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
+        {/* ========== 招聘信息模块 ========== */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mt-8"
+        >
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -421,6 +451,27 @@ export default function Home() {
 
                       {/* 操作区 */}
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* 申请按钮 */}
+                        {session && user?.id !== item.user_id && (
+                          appliedIds.has(item.id) ? (
+                            <span className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-1.5 text-xs text-green-400 flex items-center gap-1">
+                              ✓ 已申请
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleApply(item.id)}
+                              disabled={applyingId === item.id}
+                              className="rounded-lg bg-[#5CC8D6]/10 border border-[#5CC8D6]/20 px-3 py-1.5 text-xs text-[#5CC8D6] hover:bg-[#5CC8D6]/20 transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              {applyingId === item.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Plus className="h-3 w-3" />
+                              )}
+                              申请
+                            </button>
+                          )
+                        )}
                         {/* 联系按钮 */}
                         {session && user?.id !== item.user_id && (
                           <Link
@@ -452,8 +503,7 @@ export default function Home() {
               </div>
             )}
           </motion.div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
