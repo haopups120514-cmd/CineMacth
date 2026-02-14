@@ -43,9 +43,9 @@ export default function CrewListPage() {
             >
               {/* 头像 */}
               <img
-                src={member.coverImage}
+                src={member.avatarUrl}
                 alt={member.name}
-                className="h-14 w-14 rounded-full object-cover flex-shrink-0"
+                className="h-14 w-14 rounded-full object-cover flex-shrink-0 bg-neutral-800"
               />
 
               {/* 信息 */}

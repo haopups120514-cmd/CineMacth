@@ -5,7 +5,6 @@ import Image from "next/image";
 import {
   MapPin,
   Code,
-  Film,
   Heart,
   Sparkles,
   ArrowRight,
@@ -64,20 +63,14 @@ export default function AboutPage() {
           transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
           className="mt-10 overflow-hidden rounded-2xl border border-white/10"
         >
-          <div className="relative aspect-[21/9] bg-gradient-to-br from-[#0a0a0a] to-[#1a1a2e]">
-            {/* 用渐变模拟夜景氛围，等你替换真实照片 */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(92,200,214,0.15)_0%,transparent_60%)]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <Film className="mx-auto h-10 w-10 text-[#5CC8D6]/40" />
-                <p className="mt-3 text-sm text-neutral-600">
-                  锦糸町街头 · iPhone 16 Pro
-                </p>
-                <p className="mt-1 text-xs text-neutral-700">
-                  替换为你的夜景照片 → public/images/night-street.jpg
-                </p>
-              </div>
-            </div>
+          <div className="relative aspect-[21/9]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/user/photo-2.jpg"
+              alt="东京街头"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           </div>
         </motion.div>
 
@@ -176,56 +169,51 @@ export default function AboutPage() {
           {/* 照片墙 */}
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
             {[
-              { src: "/images/works-1.jpg", label: "冬 · 雪中电话亭" },
-              { src: "/images/works-2.jpg", label: "日常 · 花盆里的秘密" },
-              { src: "/images/works-3.jpg", label: "春 · 紫色花海" },
-              { src: "/images/works-4.jpg", label: "秋 · 银杏公园" },
-            ].map((photo, i) => (
+              "/images/user/photo-1.jpg",
+              "/images/user/photo-3.jpg",
+              "/images/user/photo-4.jpg",
+              "/images/user/photo-5.jpg",
+            ].map((src, i) => (
               <motion.div
-                key={photo.src}
+                key={src}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
                 className={`group relative overflow-hidden rounded-xl border border-white/10 ${
-                  i === 0 ? "md:col-span-2 md:row-span-2" : ""
+                  i === 0 ? "col-span-2 md:col-span-2" : ""
                 }`}
               >
-                <div
-                  className={`relative ${
-                    i === 0 ? "aspect-square md:aspect-[4/3]" : "aspect-square"
-                  }`}
-                >
-                  <Image
-                    src={photo.src}
-                    alt={photo.label}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                <div className={`relative bg-neutral-900 ${i === 0 ? 'aspect-[16/9]' : 'aspect-[3/2]'}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                  <p className="absolute bottom-3 left-3 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    {photo.label}
-                  </p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
               </motion.div>
             ))}
           </div>
 
-          {/* 视频占位 */}
+          {/* 封面展示 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.8 }}
-            className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+            className="mt-6 overflow-hidden rounded-2xl border border-white/10"
           >
             <div className="relative aspect-video">
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#111318]">
-                <Film className="h-12 w-12 text-[#5CC8D6]/30" />
-                <p className="mt-3 text-sm text-neutral-600">
-                  DJI Pocket 3 · 东京街拍 Vlog
-                </p>
-                <p className="mt-1 text-xs text-neutral-700">
-                  嵌入你的视频链接
-                </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/user/photo-6.jpg"
+                alt="创作集锦"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="absolute bottom-6 left-6">
+                <p className="text-sm font-medium text-white/80">创作集锦</p>
+                <p className="mt-1 text-xs text-white/50">东京 · 影像记录</p>
               </div>
             </div>
           </motion.div>

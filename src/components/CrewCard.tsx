@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import type { CrewMember } from "@/types";
 import TagBadge from "./TagBadge";
@@ -23,16 +22,25 @@ export default function CrewCard({ crew }: CrewCardProps) {
         className="group block overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all hover:border-[#5CC8D6]/30 hover:-translate-y-1"
       >
         {/* 封面图 */}
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <Image
+        <div className="relative aspect-[4/3] overflow-hidden bg-neutral-900">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={crew.coverImage}
             alt={crew.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           {/* 职业标签 */}
           <div className="absolute top-3 right-3">
             <TagBadge text={crew.role} variant="accent" />
+          </div>
+          {/* 卡通头像 */}
+          <div className="absolute bottom-3 left-3">
+            <img
+              src={crew.avatarUrl}
+              alt={crew.name}
+              className="h-10 w-10 rounded-full border-2 border-white/20 bg-neutral-800"
+            />
           </div>
         </div>
 

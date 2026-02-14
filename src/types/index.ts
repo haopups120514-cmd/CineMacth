@@ -18,6 +18,27 @@ export interface WorkItem {
   role: string;
 }
 
+export interface CreditReview {
+  reviewer: string;
+  avatarSeed: string;
+  rating: number;
+  comment: string;
+  date: string;
+  project: string;
+}
+
+export interface CreditScore {
+  overall: number;
+  punctuality: number;
+  professionalism: number;
+  skill: number;
+  communication: number;
+  reliability: number;
+  totalProjects: number;
+  totalReviews: number;
+  reviews: CreditReview[];
+}
+
 export interface CrewMember {
   id: string;
   name: string;
@@ -27,11 +48,13 @@ export interface CrewMember {
   equipment: Equipment[];
   tags: string[];
   coverImage: string;
+  avatarUrl: string;
   location: string;
   university: string;
   bio: string;
   showreelUrl?: string;
   works: WorkItem[];
+  creditScore: CreditScore;
 }
 
 export type CompensationType = "有薪" | "包食宿" | "互免" | "可谈";

@@ -235,8 +235,17 @@ export default function ProfilePage() {
       }, 2000);
     } catch (error: any) {
       setSaveStatus("error");
-      setErrorMessage(error.message || "保存失败，请重试");
-      console.error("保存失败:", error);
+      // 获取更详细的错误信息
+      const errorMsg = error?.message || error?.hint || error?.details || "保存失败，请重试";
+      setErrorMessage(errorMsg);
+      console.error("完整错误信息:", {
+        message: error?.message,
+        hint: error?.hint,
+        details: error?.details,
+        code: error?.code,
+        status: error?.status,
+        fullError: error,
+      });
     }
   };
 

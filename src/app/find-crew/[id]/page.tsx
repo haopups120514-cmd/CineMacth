@@ -1,20 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Play, MapPin, GraduationCap, Wrench } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Play, MapPin, GraduationCap, Wrench, MessageCircle, LogIn } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import TagBadge from "@/components/TagBadge";
+import CreditScoreCard from "@/components/CreditScoreCard";
+import MessagePanel from "@/components/MessagePanel";
+import { useAuth } from "@/contexts/AuthContext";
 import { mockCrew } from "@/data/mock-crew";
 
 export default function CrewDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const id = params.id as string;
   const crew = mockCrew.find((c) => c.id === id);
-  const [showToast, setShowToast] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
   if (!crew) {
     return (
@@ -28,8 +32,11 @@ export default function CrewDetailPage() {
   }
 
   const handleInvite = () => {
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    setShowChat(true);
   };
 
   return (
@@ -64,11 +71,11 @@ export default function CrewDetailPage() {
             {/* Showreel */}
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
               <div className="relative aspect-video">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={crew.coverImage}
                   alt={`${crew.name} showreel`}
-                  fill
-                  className="object-cover"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
@@ -93,11 +100,11 @@ export default function CrewDetailPage() {
                     className="overflow-hidden rounded-xl border border-white/10 bg-white/5"
                   >
                     <div className="relative aspect-video">
-                      <Image
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
                         src={work.coverImage}
                         alt={work.title}
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 h-full w-full object-cover"
                       />
                     </div>
                     <div className="p-3">
@@ -111,6 +118,11 @@ export default function CrewDetailPage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* 信用分系统 */}
+            <div className="mt-8">
+              <CreditScoreCard score={crew.creditScore} name={crew.name} />
             </div>
           </motion.div>
 
@@ -188,28 +200,34 @@ export default function CrewDetailPage() {
               {/* 邀请合作按钮 */}
               <button
                 onClick={handleInvite}
-                className="mt-6 w-full rounded-xl bg-[#5CC8D6] py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] cursor-pointer"
+                disabled={loading}
+                className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl bg-[#5CC8D6] py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] cursor-pointer disabled:opacity-50"
               >
-                邀请合作
+                {user ? (
+                  <>
+                    <MessageCircle className="h-4 w-4" />
+                    邀请合作
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4" />
+                    登录后邀请合作
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Toast */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-8 right-8 z-50 rounded-xl border border-white/15 bg-white/10 px-6 py-3 text-sm text-white backdrop-blur-md"
-          >
-            功能开发中，敬请期待
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 私信面板 */}
+      <MessagePanel
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        recipientName={crew.name}
+        recipientAvatar={crew.avatarUrl}
+        recipientRole={crew.role}
+      />
     </section>
   );
 }
