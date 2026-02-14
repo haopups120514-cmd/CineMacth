@@ -165,7 +165,7 @@ export default function DashboardPage() {
             </Link>
 
             {/* 作品集 */}
-            <Link href="/">
+            <Link href="/profile">
               <div className="group flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:border-emerald-500/50 hover:bg-white/10 cursor-pointer">
                 <div className="rounded-lg bg-emerald-500/20 p-3">
                   <Upload className="h-5 w-5 text-emerald-400" />

@@ -39,11 +39,27 @@ export interface DbPortfolio {
   title: string;
   description: string;
   media_url: string;
-  media_type: string;
+  media_type: string; // "image" | "youtube"
   year: number | null;
   role_in_project: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface DbRecruitment {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  role_needed: string;
+  location: string;
+  compensation: string;
+  shoot_date: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  // 关联
+  poster?: DbProfile;
 }
 
 export interface ConversationPreview {
@@ -142,6 +158,13 @@ export async function sendMessage(
   receiverId: string,
   content: string
 ): Promise<DbMessage | null> {
+  // 先检查频率限制
+  const rateCheck = await checkMessageRateLimit(senderId, receiverId);
+  if (!rateCheck.allowed) {
+    console.warn("私信频率限制:", rateCheck.reason);
+    return null;
+  }
+
   const { data, error } = await supabase
     .from("messages")
     .insert({
@@ -158,6 +181,48 @@ export async function sendMessage(
   }
 
   return data;
+}
+
+/**
+ * 检查消息发送频率限制
+ * 规则：对方未回复前，每天只能发送一条消息
+ */
+export async function checkMessageRateLimit(
+  senderId: string,
+  receiverId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  // 查询今天发给对方的消息
+  const { data: todaySent } = await supabase
+    .from("messages")
+    .select("created_at")
+    .eq("sender_id", senderId)
+    .eq("receiver_id", receiverId)
+    .gte("created_at", todayStart.toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  // 今天没发过，允许
+  if (!todaySent || todaySent.length === 0) {
+    return { allowed: true };
+  }
+
+  // 今天发过了，检查对方是否回复过
+  const { data: replyAfter } = await supabase
+    .from("messages")
+    .select("created_at")
+    .eq("sender_id", receiverId)
+    .eq("receiver_id", senderId)
+    .gt("created_at", todaySent[0].created_at)
+    .limit(1);
+
+  if (replyAfter && replyAfter.length > 0) {
+    return { allowed: true }; // 对方已回复，允许继续发送
+  }
+
+  return { allowed: false, reason: "对方未回复前，每天只能发送一条消息" };
 }
 
 /**
@@ -470,4 +535,185 @@ export function formatRelativeTime(dateStr: string): string {
   if (hours < 24) return `${hours}小时前`;
   if (days < 7) return `${days}天前`;
   return date.toLocaleDateString("zh-CN");
+}
+
+// ==================== Cloudinary 图片压缩 ====================
+
+/**
+ * 上传图片到 Cloudinary 并自动压缩
+ */
+export async function uploadToCloudinary(file: File): Promise<string | null> {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    console.error("Cloudinary 配置缺失，请设置环境变量");
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+  formData.append("folder", "cinematch-portfolios");
+
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      { method: "POST", body: formData }
+    );
+
+    if (!res.ok) {
+      console.error("Cloudinary 上传失败:", res.statusText);
+      return null;
+    }
+
+    const data = await res.json();
+    // 返回自动压缩 + 质量优化的 URL
+    const optimizedUrl = data.secure_url.replace(
+      "/upload/",
+      "/upload/q_auto,f_auto,w_1200/"
+    );
+    return optimizedUrl;
+  } catch (err) {
+    console.error("Cloudinary 上传异常:", err);
+    return null;
+  }
+}
+
+// ==================== YouTube 工具 ====================
+
+/**
+ * 从 YouTube URL 提取视频 ID
+ */
+export function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/**
+ * 获取 YouTube 缩略图
+ */
+export function getYouTubeThumbnail(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+// ==================== 招聘信息 ====================
+
+/**
+ * 发布招聘信息
+ */
+export async function createRecruitment(item: {
+  user_id: string;
+  title: string;
+  description?: string;
+  role_needed: string;
+  location?: string;
+  compensation?: string;
+  shoot_date?: string;
+}): Promise<DbRecruitment | null> {
+  const { data, error } = await supabase
+    .from("recruitments")
+    .insert(item)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("发布招聘信息失败:", error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * 获取所有招聘信息（含发布者信息）
+ */
+export async function fetchRecruitments(): Promise<(DbRecruitment & { poster?: DbProfile })[]> {
+  const { data, error } = await supabase
+    .from("recruitments")
+    .select("*")
+    .eq("status", "招募中")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("获取招聘信息失败:", error);
+    return [];
+  }
+
+  // 获取发布者信息
+  const userIds = [...new Set(data.map((r) => r.user_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("id", userIds);
+
+  const profileMap = new Map<string, DbProfile>();
+  (profiles || []).forEach((p: DbProfile) => profileMap.set(p.id, p));
+
+  return data.map((r) => ({
+    ...r,
+    poster: profileMap.get(r.user_id) || undefined,
+  }));
+}
+
+/**
+ * 获取用户发布的招聘信息
+ */
+export async function fetchUserRecruitments(userId: string): Promise<DbRecruitment[]> {
+  const { data, error } = await supabase
+    .from("recruitments")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("获取用户招聘信息失败:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * 删除招聘信息
+ */
+export async function deleteRecruitment(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("recruitments")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("删除招聘信息失败:", error);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 更新招聘状态
+ */
+export async function updateRecruitmentStatus(id: string, status: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("recruitments")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    console.error("更新招聘状态失败:", error);
+    return false;
+  }
+
+  return true;
 }

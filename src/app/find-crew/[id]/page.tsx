@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, MapPin, GraduationCap, Wrench, MessageCircle, LogIn, Shield } from "lucide-react";
+import { ArrowLeft, Play, MapPin, GraduationCap, Wrench, MessageCircle, LogIn, Shield, Youtube, ExternalLink } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import TagBadge from "@/components/TagBadge";
 import CreditScoreCard from "@/components/CreditScoreCard";
@@ -17,6 +17,8 @@ import {
   fetchUserPortfolios,
   getDisplayName,
   getAvatarUrl,
+  extractYouTubeId,
+  getYouTubeThumbnail,
   type DbProfile,
   type DbPortfolio,
 } from "@/lib/database";
@@ -220,38 +222,61 @@ export default function CrewDetailPage() {
               <div className="mt-8">
                 <h2 className="text-xl font-bold text-white">作品集</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4">
-                  {portfolios.map((item) => (
-                    <div
-                      key={item.id}
-                      className="overflow-hidden rounded-xl border border-white/10 bg-white/5"
-                    >
-                      <div className="relative aspect-video">
-                        {item.media_type === "image" ? (
-                          <img
-                            src={item.media_url}
-                            alt={item.title}
-                            className="absolute inset-0 h-full w-full object-cover"
-                          />
-                        ) : (
-                          <video
-                            src={item.media_url}
-                            className="absolute inset-0 h-full w-full object-cover"
-                            muted
-                          />
-                        )}
+                  {portfolios.map((item) => {
+                    const isYouTube = item.media_type === "youtube";
+                    const videoId = isYouTube ? extractYouTubeId(item.media_url) : null;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="overflow-hidden rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:border-white/20 transition-all"
+                        onClick={() => {
+                          if (isYouTube && videoId) {
+                            window.open(`https://www.youtube.com/watch?v=${videoId}`, "_blank");
+                          } else {
+                            window.open(item.media_url, "_blank");
+                          }
+                        }}
+                      >
+                        <div className="relative aspect-video">
+                          {isYouTube && videoId ? (
+                            <>
+                              <img
+                                src={getYouTubeThumbnail(videoId)}
+                                alt={item.title}
+                                className="absolute inset-0 h-full w-full object-cover"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90">
+                                  <Youtube className="h-6 w-6 text-white" />
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <img
+                              src={item.media_url}
+                              alt={item.title}
+                              className="absolute inset-0 h-full w-full object-cover"
+                            />
+                          )}
+                          <div className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-white/70 flex items-center gap-1">
+                            <ExternalLink className="h-2.5 w-2.5" />
+                            {isYouTube ? "YouTube" : "图片"}
+                          </div>
+                        </div>
+                        <div className="p-3">
+                          <h3 className="text-sm font-medium text-white">{item.title}</h3>
+                          <p className="mt-0.5 text-xs text-neutral-500">
+                            {item.year && `${item.year}`}
+                            {item.role_in_project && ` · ${item.role_in_project}`}
+                          </p>
+                          {item.description && (
+                            <p className="mt-1 text-xs text-neutral-400 line-clamp-2">{item.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-3">
-                        <h3 className="text-sm font-medium text-white">{item.title}</h3>
-                        <p className="mt-0.5 text-xs text-neutral-500">
-                          {item.year && `${item.year}`}
-                          {item.role_in_project && ` · ${item.role_in_project}`}
-                        </p>
-                        {item.description && (
-                          <p className="mt-1 text-xs text-neutral-400 line-clamp-2">{item.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

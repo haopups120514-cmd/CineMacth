@@ -9,6 +9,7 @@ import {
   fetchConversation,
   markMessagesRead,
   subscribeToConversation,
+  checkMessageRateLimit,
   type DbMessage,
 } from "@/lib/database";
 
@@ -48,6 +49,7 @@ export default function RealMessagePanel({
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -105,6 +107,14 @@ export default function RealMessagePanel({
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || !user || sending) return;
+
+    // 先检查频率限制
+    setRateLimitError("");
+    const rateCheck = await checkMessageRateLimit(user.id, recipientId);
+    if (!rateCheck.allowed) {
+      setRateLimitError(rateCheck.reason || "发送频率受限");
+      return;
+    }
 
     setSending(true);
     setInput("");
@@ -295,6 +305,11 @@ export default function RealMessagePanel({
 
             {/* 输入区域 */}
             <div className="border-t border-white/10 bg-white/5 px-4 py-3">
+              {rateLimitError && (
+                <div className="mb-2 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-400">
+                  ⚠️ {rateLimitError}
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <button className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
                   <Paperclip className="h-4 w-4" />

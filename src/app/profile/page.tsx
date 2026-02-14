@@ -1,13 +1,15 @@
 "use client";
 
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronLeft, Save, AlertCircle, Upload, Edit2 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
 import PageBackground from "@/components/PageBackground";
+import PortfolioUpload from "@/components/PortfolioUpload";
 import { supabase } from "@/lib/supabase";
+import { fetchUserPortfolios, type DbPortfolio } from "@/lib/database";
 import {
   generateRandomUsername,
   isValidUsername,
@@ -54,6 +56,17 @@ export default function ProfilePage() {
   const [usernameError, setUsernameError] = useState("");
   const [canChangeUsernameFlag, setCanChangeUsernameFlag] = useState(true);
   const [nextChangeDate, setNextChangeDate] = useState<Date | null>(null);
+  const [portfolios, setPortfolios] = useState<DbPortfolio[]>([]);
+
+  const loadPortfolios = useCallback(async () => {
+    if (!user) return;
+    const items = await fetchUserPortfolios(user.id);
+    setPortfolios(items);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) loadPortfolios();
+  }, [user, loadPortfolios]);
 
   const [formData, setFormData] = useState<ProfileFormData>({
     username: "",
@@ -606,6 +619,32 @@ export default function ProfilePage() {
               取消
             </Link>
           </div>
+        </motion.div>
+
+        {/* 作品集管理 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-12"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-extrabold text-white">我的作品集</h2>
+              <p className="mt-1 text-sm text-neutral-400">
+                管理你的影视作品，展示在你的个人主页上
+              </p>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5">
+              <Upload className="h-4 w-4 text-emerald-400" />
+              <span className="text-xs text-emerald-400">{portfolios.length} 部作品</span>
+            </div>
+          </div>
+
+          <PortfolioUpload
+            portfolios={portfolios}
+            onUpdate={loadPortfolios}
+          />
         </motion.div>
       </div>
     </section>
