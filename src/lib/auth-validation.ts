@@ -10,6 +10,8 @@ const ALLOWED_DOMAINS = [
 // 测试账户白名单
 const WHITELIST_EMAILS = [
   "haopups120514@gmail.com",
+  "yaojunwang607@gmail.com",
+  "haopups@foxmail.com",
 ];
 
 export function isStudentEmail(email: string): boolean {
