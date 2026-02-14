@@ -272,10 +272,10 @@ export default function AboutPage() {
             有任何想法或建议？欢迎直接发送邮件
           </p>
           <a
-            href="mailto:haopups120514@gmaail.com"
+            href="mailto:haopups120514@gmail.com"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
           >
-            <span>haopups120514@gmaail.com</span>
+            <span>haopups120514@gmail.com</span>
             <ArrowRight className="h-4 w-4" />
           </a>
         </motion.div>

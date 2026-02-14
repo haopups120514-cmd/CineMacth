@@ -89,8 +89,17 @@ export default function ProfilePage() {
           setAvatarPreview(data.avatar_url);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("加载资料失败:", error);
+      // 忽略"no rows found"错误，这是正常的（新用户）
+      if (error?.code !== "PGRST116") {
+        console.error("完整错误信息:", {
+          message: error?.message,
+          code: error?.code,
+          status: error?.status,
+          hint: error?.hint
+        });
+      }
     } finally {
       setIsLoadingProfile(false);
     }
