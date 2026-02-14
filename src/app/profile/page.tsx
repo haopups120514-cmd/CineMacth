@@ -24,6 +24,8 @@ interface ProfileFormData {
   equipment: string;
   styles: string[];
   avatar_url?: string;
+  location: string;
+  university: string;
 }
 
 const AVAILABLE_ROLES = ["摄影师", "灯光师", "录音师", "剪辑师", "美术师", "导演", "制片"];
@@ -62,6 +64,8 @@ export default function ProfilePage() {
     equipment: "",
     styles: [],
     avatar_url: "",
+    location: "",
+    university: "",
   });
 
   // 加载用户资料
@@ -96,6 +100,8 @@ export default function ProfilePage() {
           equipment: data.equipment || "",
           styles: data.styles || [],
           avatar_url: data.avatar_url || "",
+          location: data.location || "",
+          university: data.university || "",
         });
         if (data.avatar_url) {
           setAvatarPreview(data.avatar_url);
@@ -212,6 +218,8 @@ export default function ProfilePage() {
         equipment: formData.equipment,
         styles: formData.styles,
         avatar_url: avatar_url || null,
+        location: formData.location,
+        university: formData.university,
         updated_at: new Date().toISOString(),
       };
 
@@ -508,6 +516,36 @@ export default function ProfilePage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* 所在地区 */}
+          <div>
+            <label className="block text-sm font-semibold text-neutral-300 mb-2">
+              所在地区
+            </label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="例如：东京・新宿"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
+            />
+          </div>
+
+          {/* 学校 */}
+          <div>
+            <label className="block text-sm font-semibold text-neutral-300 mb-2">
+              学校
+            </label>
+            <input
+              type="text"
+              name="university"
+              value={formData.university}
+              onChange={handleInputChange}
+              placeholder="例如：日本大学芸術学部"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
+            />
           </div>
 
           {/* 设备 - 自定义输入 */}

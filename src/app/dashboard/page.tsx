@@ -11,13 +11,16 @@ import {
   ArrowRight,
   Users,
   Megaphone,
-  Heart
+  Heart,
+  MessageCircle,
+  Shield,
+  Upload
 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
 import PageBackground from "@/components/PageBackground";
 
 export default function DashboardPage() {
-  const { user, session, signOut, loading } = useContext(AuthContext);
+  const { user, session, signOut, loading, userProfile } = useContext(AuthContext);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,10 +67,15 @@ export default function DashboardPage() {
             {/* 头像显示 */}
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl border border-[#5CC8D6]/30 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
               <img
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
+                src={userProfile?.avatar_url || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
                 alt={user?.email || "用户"}
                 className="w-full h-full object-cover"
               />
+            </div>
+            {/* 信用分 */}
+            <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 flex-shrink-0">
+              <Shield className="h-4 w-4 text-amber-400" />
+              <span className="text-sm font-semibold text-amber-400">{userProfile?.credit_score ?? 80}</span>
             </div>
             <button
               onClick={handleSignOut}
@@ -107,23 +115,26 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          {/* 我的活动卡片 */}
-          <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-[#0a0a0a] p-6 cursor-default">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/5 group-hover:to-transparent transition-all" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-purple-500/20 p-3">
-                    <Zap className="h-6 w-6 text-purple-400" />
+          {/* 私信卡片 */}
+          <Link href="/messages">
+            <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-[#0a0a0a] p-6 transition-all hover:border-purple-500/30 hover:bg-purple-500/5 cursor-pointer">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/5 group-hover:to-transparent transition-all" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-purple-500/20 p-3">
+                      <MessageCircle className="h-6 w-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">我的私信</h3>
+                      <p className="text-sm text-neutral-400">查看对话</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-white">我的活动</h3>
-                    <p className="text-sm text-neutral-400">敬请期待</p>
-                  </div>
+                  <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-purple-400 transition-colors" />
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         </motion.div>
 
         {/* 快速操作区域 */}
@@ -138,7 +149,7 @@ export default function DashboardPage() {
             <p className="mt-2 text-neutral-400">探索 CineMatch 的各个部分</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* 寻找创作伙伴 */}
             <Link href="/crew">
               <div className="group flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:border-[#5CC8D6]/50 hover:bg-white/10 cursor-pointer">
@@ -150,6 +161,20 @@ export default function DashboardPage() {
                   <p className="text-sm text-neutral-400">招募创作伙伴</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-[#5CC8D6] transition-colors" />
+              </div>
+            </Link>
+
+            {/* 作品集 */}
+            <Link href="/">
+              <div className="group flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:border-emerald-500/50 hover:bg-white/10 cursor-pointer">
+                <div className="rounded-lg bg-emerald-500/20 p-3">
+                  <Upload className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">作品集</h3>
+                  <p className="text-sm text-neutral-400">上传你的作品</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-emerald-400 transition-colors" />
               </div>
             </Link>
 
