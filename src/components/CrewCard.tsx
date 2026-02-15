@@ -4,12 +4,18 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CrewMember } from "@/types";
 import TagBadge from "./TagBadge";
+import { useAutoTranslate, useTranslateEnum } from "@/hooks/useTranslate";
 
 interface CrewCardProps {
   crew: CrewMember;
 }
 
 export default function CrewCard({ crew }: CrewCardProps) {
+  const te = useTranslateEnum();
+  const translatedBio = useAutoTranslate(crew.bio);
+  const translatedLocation = useAutoTranslate(crew.location);
+  const translatedUniversity = useAutoTranslate(crew.university);
+
   return (
     <motion.div
       variants={{
@@ -32,7 +38,7 @@ export default function CrewCard({ crew }: CrewCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           {/* 职业标签 */}
           <div className="absolute top-3 right-3">
-            <TagBadge text={crew.role} variant="accent" />
+            <TagBadge text={te(crew.role)} variant="accent" />
           </div>
           {/* 卡通头像 */}
           <div className="absolute bottom-3 left-3">
@@ -48,18 +54,18 @@ export default function CrewCard({ crew }: CrewCardProps) {
         <div className="p-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-white">{crew.name}</h3>
-            <span className="text-xs text-neutral-500">{crew.location}</span>
+            <span className="text-xs text-neutral-500">{translatedLocation}</span>
           </div>
 
-          <p className="mt-1 text-xs text-neutral-500">{crew.university}</p>
+          <p className="mt-1 text-xs text-neutral-500">{translatedUniversity}</p>
 
           <p className="mt-2 text-sm text-neutral-400 line-clamp-1">
-            {crew.bio}
+            {translatedBio}
           </p>
 
           {/* 风格 */}
           <p className="mt-2 text-xs text-[#5CC8D6]">
-            {crew.styles.join(" · ")}
+            {crew.styles.map(s => te(s)).join(" · ")}
           </p>
 
           {/* 标签 */}

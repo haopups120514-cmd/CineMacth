@@ -48,7 +48,7 @@ export default function DashboardPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 py-12 sm:py-16">
         {/* 头部欢迎区域 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -56,9 +56,9 @@ export default function DashboardPage() {
           transition={{ duration: 0.6 }}
           className="mb-12"
         >
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl font-extrabold text-white md:text-4xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-6">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white md:text-4xl">
                 {t("dashboard", "welcome")}
               </h1>
               <p className="mt-2 text-lg text-neutral-400">
@@ -66,7 +66,7 @@ export default function DashboardPage() {
               </p>
             </div>
             {/* 头像显示 */}
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl border border-[#5CC8D6]/30 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl border border-[#5CC8D6]/30 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
               <img
                 src={userProfile?.avatar_url || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
                 alt={user?.email || t("common", "user")}
@@ -80,7 +80,7 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/20"
+              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-red-400 transition-all hover:bg-red-500/20"
             >
               <LogOut className="h-4 w-4" />
               {t("common", "logout")}
@@ -143,10 +143,10 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+          className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-sm"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-extrabold text-white">{t("dashboard", "whatNext")}</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white">{t("dashboard", "whatNext")}</h2>
             <p className="mt-2 text-neutral-400">{t("dashboard", "exploreDesc")}</p>
           </div>
 

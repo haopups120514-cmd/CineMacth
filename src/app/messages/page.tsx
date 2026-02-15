@@ -67,7 +67,7 @@ export default function MessagesPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-2xl px-6 py-12">
+      <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-12">
         {/* 返回 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -89,7 +89,7 @@ export default function MessagesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-extrabold text-white">{t("messages", "title")}</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{t("messages", "title")}</h1>
           <p className="mt-2 text-neutral-400">{t("messages", "subtitle")}</p>
         </motion.div>
 
@@ -129,7 +129,7 @@ export default function MessagesPage() {
               <button
                 key={conv.partnerId}
                 onClick={() => setSelectedConv(conv)}
-                className="flex w-full items-center gap-4 px-5 py-4 hover:bg-white/5 transition-colors text-left cursor-pointer"
+                className="flex w-full items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 hover:bg-white/5 transition-colors text-left cursor-pointer"
               >
                 {/* 头像 */}
                 <div className="relative flex-shrink-0">

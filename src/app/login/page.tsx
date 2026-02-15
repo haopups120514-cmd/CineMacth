@@ -85,7 +85,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md mx-6 rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-md"
+        className="relative z-10 w-full max-w-md mx-4 sm:mx-6 rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8 backdrop-blur-md"
       >
         {step === "email" ? (
           /* 步骤 1：输入邮箱 */

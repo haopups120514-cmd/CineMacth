@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PageBackground from "@/components/PageBackground";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAutoTranslate, useTranslateEnum } from "@/hooks/useTranslate";
 
 interface UserProfile {
   id: string;
@@ -28,6 +29,8 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { t } = useLanguage();
+  const te = useTranslateEnum();
+  const translatedBio = useAutoTranslate(profile?.bio || "");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -85,7 +88,7 @@ export default function UserProfilePage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-3xl px-6 py-16">
+      <div className="relative z-10 mx-auto max-w-3xl px-4 sm:px-6 py-12 sm:py-16">
         {/* 返回按钮 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -107,7 +110,7 @@ export default function UserProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+          className="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-8 backdrop-blur-sm"
         >
           {/* 头像 */}
           <div className="flex flex-col sm:flex-row gap-8 items-start sm:items-center mb-8">
@@ -128,7 +131,7 @@ export default function UserProfilePage() {
             </div>
 
             <div className="flex-1">
-              <h1 className="text-3xl font-extrabold text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
                 {profile.display_name}
               </h1>
               {profile.full_name && (
@@ -138,7 +141,7 @@ export default function UserProfilePage() {
               )}
               {profile.role && (
                 <div className="inline-block px-3 py-1 rounded-lg bg-[#5CC8D6]/20 text-[#5CC8D6] text-sm font-semibold">
-                  {profile.role}
+                  {te(profile.role)}
                 </div>
               )}
             </div>
@@ -154,7 +157,7 @@ export default function UserProfilePage() {
                 {t("userPage", "bio")}
               </h2>
               <p className="text-base text-neutral-300 leading-relaxed">
-                {profile.bio}
+                {translatedBio}
               </p>
             </div>
           )}
@@ -171,7 +174,7 @@ export default function UserProfilePage() {
                     key={style}
                     className="inline-block px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm"
                   >
-                    {style}
+                    {te(style)}
                   </span>
                 ))}
               </div>

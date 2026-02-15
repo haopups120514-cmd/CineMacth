@@ -16,12 +16,14 @@ import PageBackground from "@/components/PageBackground";
 import TagBadge from "@/components/TagBadge";
 import { mockProjects } from "@/data/mock-projects";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslateEnum, TranslatedText } from "@/hooks/useTranslate";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const project = mockProjects.find((p) => p.id === id);
   const { t } = useLanguage();
+  const te = useTranslateEnum();
   const [showToast, setShowToast] = useState(false);
 
   if (!project) {
@@ -47,7 +49,7 @@ export default function ProjectDetailPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-12">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 py-10 sm:py-12">
         {/* 返回 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -71,13 +73,13 @@ export default function ProjectDetailPage() {
           className="mt-8"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-extrabold text-white md:text-4xl">
-              {project.title}
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white md:text-4xl">
+              <TranslatedText text={project.title} />
             </h1>
-            <TagBadge text={project.type} variant="accent" />
+            <TagBadge text={te(project.type)} variant="accent" />
             <span className="inline-flex items-center gap-1 rounded-full bg-green-500/15 px-2.5 py-0.5 text-xs text-green-400">
               <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-              {project.status}
+              {te(project.status)}
             </span>
           </div>
           <p className="mt-2 text-sm text-neutral-500">
@@ -98,7 +100,7 @@ export default function ProjectDetailPage() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
               <h2 className="text-lg font-bold text-white">{t("projectDetail", "synopsis")}</h2>
               <p className="mt-3 text-sm leading-relaxed text-neutral-300">
-                {project.description}
+                <TranslatedText text={project.description} />
               </p>
             </div>
 
@@ -110,13 +112,13 @@ export default function ProjectDetailPage() {
                   <h2 className="text-lg font-bold text-white">{t("projectDetail", "script")}</h2>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-neutral-300">
-                  {project.synopsis}
+                  <TranslatedText text={project.synopsis || ""} />
                 </p>
               </div>
             )}
 
             {/* 拍摄信息 */}
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-neutral-500">
                   <Calendar className="h-4 w-4" />
@@ -133,7 +135,7 @@ export default function ProjectDetailPage() {
                   <span className="text-xs">{t("projectDetail", "shootLocation")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
-                  {project.location}
+                  <TranslatedText text={project.location} />
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -142,7 +144,7 @@ export default function ProjectDetailPage() {
                   <span className="text-xs">{t("projectDetail", "compensation")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
-                  {project.compensation}
+                  {te(project.compensation)}
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -151,7 +153,7 @@ export default function ProjectDetailPage() {
                   <span className="text-xs">{t("projectDetail", "projectType")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
-                  {project.type}
+                  {te(project.type)}
                 </p>
               </div>
             </div>
@@ -164,7 +166,7 @@ export default function ProjectDetailPage() {
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             className="w-full lg:w-72 shrink-0"
           >
-            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-md">
               <h2 className="text-lg font-bold text-white">{t("projectDetail", "recruitRoles")}</h2>
 
               <div className="mt-4 flex flex-col gap-3">
@@ -182,7 +184,7 @@ export default function ProjectDetailPage() {
                             : "text-white"
                         }`}
                       >
-                        {pos.title}
+                        <TranslatedText text={pos.title} />
                       </span>
                       <span
                         className={`text-xs ${
@@ -205,7 +207,7 @@ export default function ProjectDetailPage() {
               {/* 标签 */}
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {project.tags.map((tag) => (
-                  <TagBadge key={tag} text={tag} variant="muted" />
+                  <TagBadge key={tag} text={te(tag)} variant="muted" />
                 ))}
               </div>
 

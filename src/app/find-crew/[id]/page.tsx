@@ -12,6 +12,7 @@ import MessagePanel from "@/components/MessagePanel";
 import RealMessagePanel from "@/components/RealMessagePanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslateEnum, TranslatedText } from "@/hooks/useTranslate";
 import { mockCrew } from "@/data/mock-crew";
 import {
   fetchProfileById,
@@ -30,6 +31,7 @@ export default function CrewDetailPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const { t } = useLanguage();
+  const te = useTranslateEnum();
   const id = params.id as string;
 
   // 检查是否为 mock crew
@@ -143,7 +145,7 @@ export default function CrewDetailPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-12">
         {/* 返回 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -183,15 +185,15 @@ export default function CrewDetailPage() {
             {/* Showreel / 头像区域 */}
             {isRealUser ? (
               <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-8">
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6">
                   <img
                     src={avatarUrl}
                     alt={displayName}
-                    className="h-24 w-24 rounded-full bg-neutral-800"
+                    className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-neutral-800"
                   />
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{displayName}</h2>
-                    <p className="mt-1 text-neutral-400">{role}</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white">{displayName}</h2>
+                    <p className="mt-1 text-neutral-400">{te(role)}</p>
                     <div className="mt-2 flex items-center gap-2">
                       <Shield className="h-4 w-4 text-amber-400" />
                       <span className="text-sm text-amber-400">{t("common", "creditScore")} {creditScore.overall}</span>
@@ -223,7 +225,7 @@ export default function CrewDetailPage() {
             {isRealUser && portfolios.length > 0 && (
               <div className="mt-8">
                 <h2 className="text-xl font-bold text-white">{t("crewDetail", "portfolio")}</h2>
-                <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {portfolios.map((item) => {
                     const isYouTube = item.media_type === "youtube";
                     const videoId = isYouTube ? extractYouTubeId(item.media_url) : null;
@@ -287,7 +289,7 @@ export default function CrewDetailPage() {
             {!isRealUser && works.length > 0 && (
               <div className="mt-8">
                 <h2 className="text-xl font-bold text-white">{t("crewDetail", "portfolio")}</h2>
-                <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {works.map((work) => (
                     <div
                       key={work.title}
@@ -301,8 +303,8 @@ export default function CrewDetailPage() {
                         />
                       </div>
                       <div className="p-3">
-                        <h3 className="text-sm font-medium text-white">{work.title}</h3>
-                        <p className="mt-0.5 text-xs text-neutral-500">{work.year} · {work.role}</p>
+                        <h3 className="text-sm font-medium text-white"><TranslatedText text={work.title} /></h3>
+                        <p className="mt-0.5 text-xs text-neutral-500">{work.year} · {te(work.role)}</p>
                       </div>
                     </div>
                   ))}
@@ -323,7 +325,7 @@ export default function CrewDetailPage() {
             transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
             className="w-full lg:w-80 shrink-0"
           >
-            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+            <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 backdrop-blur-md">
               {/* 名字 */}
               <h1 className="text-2xl font-bold text-white">{displayName}</h1>
               {!isRealUser && mockCrewMember && (
@@ -332,23 +334,23 @@ export default function CrewDetailPage() {
 
               {/* 职业 */}
               <div className="mt-4">
-                <TagBadge text={role} variant="accent" />
+                <TagBadge text={te(role)} variant="accent" />
               </div>
 
               {/* 学校 */}
               <div className="mt-4 flex items-center gap-2 text-sm text-neutral-400">
                 <GraduationCap className="h-4 w-4 text-neutral-500" />
-                {university}
+                <TranslatedText text={university} />
               </div>
 
               {/* 地点 */}
               <div className="mt-2 flex items-center gap-2 text-sm text-neutral-400">
                 <MapPin className="h-4 w-4 text-neutral-500" />
-                {location}
+                <TranslatedText text={location} />
               </div>
 
               {/* Bio */}
-              <p className="mt-4 text-sm text-neutral-300">{bio}</p>
+              <p className="mt-4 text-sm text-neutral-300"><TranslatedText text={bio} /></p>
 
               {/* 风格 */}
               {styles.length > 0 && (
@@ -356,7 +358,7 @@ export default function CrewDetailPage() {
                   <p className="text-xs text-neutral-500 mb-2">{t("crewDetail", "stylesLabel")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {styles.map((s) => (
-                      <TagBadge key={s} text={s} variant="accent" />
+                      <TagBadge key={s} text={te(s)} variant="accent" />
                     ))}
                   </div>
                 </div>

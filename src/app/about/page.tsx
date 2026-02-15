@@ -28,7 +28,7 @@ export default function AboutPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-4xl px-6 py-16">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 sm:px-6 py-12 sm:py-16">
         {/* ===== Section 1: 使命 ===== */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -41,7 +41,7 @@ export default function AboutPage() {
             {t("aboutPage", "missionLabel")}
           </span>
 
-          <h1 className="mt-6 text-3xl font-extrabold leading-snug text-white md:text-5xl">
+          <h1 className="mt-6 text-2xl sm:text-3xl font-extrabold leading-snug text-white md:text-5xl">
             {t("aboutPage", "missionTitle1")}
             <br />
             {t("aboutPage", "missionTitle2")} <span className="text-[#5CC8D6]">CineMatch</span>？
@@ -88,9 +88,9 @@ export default function AboutPage() {
           <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start">
             {/* 头像区域 */}
             <div className="shrink-0">
-              <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5CC8D6]/20 to-[#0a0a0a]">
+              <div className="relative h-32 w-32 sm:h-48 sm:w-48 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#5CC8D6]/20 to-[#0a0a0a]">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-5xl font-bold text-[#5CC8D6]/60">K</span>
+                  <span className="text-4xl sm:text-5xl font-bold text-[#5CC8D6]/60">K</span>
                 </div>
                 {/* 替换为真实头像：
                 <Image src="/images/avatar.jpg" alt="Koko" fill className="object-cover" /> */}
@@ -103,7 +103,7 @@ export default function AboutPage() {
 
             {/* 文字介绍 */}
             <div className="flex-1">
-              <h2 className="text-2xl font-extrabold text-white md:text-3xl">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white md:text-3xl">
                 {t("aboutPage", "aboutKoko")} <span className="text-[#5CC8D6]">Koko</span>
                 <span className="ml-2 text-base font-normal text-neutral-500">
                   (Hu Haoyu)
@@ -154,7 +154,7 @@ export default function AboutPage() {
             {t("aboutPage", "visualsLabel")}
           </span>
 
-          <h2 className="mt-6 text-2xl font-extrabold text-white md:text-3xl">
+          <h2 className="mt-6 text-xl sm:text-2xl font-extrabold text-white md:text-3xl">
             {t("aboutPage", "visualsTitle")}
           </h2>
           <p className="mt-3 text-base text-neutral-400">
@@ -227,14 +227,14 @@ export default function AboutPage() {
           <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/find-crew"
-              className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
+              className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
             >
               {t("aboutPage", "ctaRecruit")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/projects"
-              className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
+              className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold text-white transition-all hover:bg-white/10"
             >
               {t("aboutPage", "ctaJoin")}
             </Link>
@@ -246,9 +246,9 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="mt-24 rounded-2xl border border-white/10 bg-white/5 p-8 text-center md:p-12"
+          className="mt-24 rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8 text-center md:p-12"
         >
-          <h2 className="text-2xl font-extrabold text-white">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white">
             {t("aboutPage", "contactTitle")}
           </h2>
           <p className="mt-3 text-base text-neutral-400">

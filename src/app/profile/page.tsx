@@ -304,7 +304,7 @@ export default function ProfilePage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-2xl px-6 py-16">
+      <div className="relative z-10 mx-auto max-w-2xl px-4 sm:px-6 py-12 sm:py-16">
         {/* 返回按钮 */}
         <motion.div
           initial={{ opacity: 0, x: -10 }}
@@ -328,7 +328,7 @@ export default function ProfilePage() {
           transition={{ duration: 0.6 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-extrabold text-white md:text-4xl">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white md:text-4xl">
             {t("profile", "title")}
           </h1>
           <p className="mt-2 text-neutral-400">
@@ -662,18 +662,18 @@ export default function ProfilePage() {
           </div>
 
           {/* 保存按钮 */}
-          <div className="flex gap-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6">
             <button
               onClick={handleSave}
               disabled={saveStatus === "saving" || isLoadingProfile}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#5CC8D6] px-6 sm:px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-5 w-5" />
               {saveStatus === "saving" ? t("profile", "saving") : t("profile", "saveProfile")}
             </button>
             <Link
               href="/dashboard"
-              className="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
+              className="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-6 sm:px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
             >
               {t("common", "cancel")}
             </Link>
@@ -689,7 +689,7 @@ export default function ProfilePage() {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-extrabold text-white">{t("profile", "portfolioTitle")}</h2>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white">{t("profile", "portfolioTitle")}</h2>
               <p className="mt-1 text-sm text-neutral-400">
                 {t("profile", "portfolioDesc")}
               </p>

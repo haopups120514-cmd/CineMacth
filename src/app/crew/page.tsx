@@ -36,7 +36,7 @@ export default function CrewListPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="sticky top-16 z-10 bg-black/40 backdrop-blur-md border-b border-white/10 px-6 py-4"
+          className="sticky top-16 z-10 bg-black/40 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 sm:py-4"
         >
           <h1 className="text-xl font-bold text-white">
             {t("crew", "title")}
@@ -58,7 +58,7 @@ export default function CrewListPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <div className="flex items-center gap-2 px-6 pt-4 pb-2">
+            <div className="flex items-center gap-2 px-4 sm:px-6 pt-4 pb-2">
               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-medium text-emerald-400">{t("common", "registeredUser")}</span>
               <Users className="h-3 w-3 text-emerald-400" />
@@ -68,20 +68,19 @@ export default function CrewListPage() {
                 <Link
                   key={profile.id}
                   href={`/find-crew/${profile.id}`}
-                  className="flex items-center gap-4 px-6 py-4 hover:bg-emerald-500/5 transition-colors group border-l-2 border-emerald-500/30"
+                  className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-emerald-500/5 transition-colors group border-l-2 border-emerald-500/30"
                 >
                   {/* 头像 */}
                   <img
                     src={getAvatarUrl(profile)}
                     alt={getDisplayName(profile)}
-                    className="h-14 w-14 rounded-full object-cover flex-shrink-0 bg-neutral-800"
+                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover flex-shrink-0 bg-neutral-800"
                   />
 
                   {/* 信息 */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold text-white truncate">
-                        {getDisplayName(profile)}
+                      <h3 className="text-sm sm:text-base font-semibold text-white truncate">
                       </h3>
                       {profile.role && (
                         <span className="inline-block px-2 py-1 text-xs rounded bg-[#5CC8D6]/20 text-[#5CC8D6] flex-shrink-0">
@@ -123,7 +122,7 @@ export default function CrewListPage() {
 
         {/* 分割线 */}
         {realUsers.length > 0 && (
-          <div className="flex items-center gap-4 px-6 py-3">
+          <div className="flex items-center gap-4 px-4 sm:px-6 py-3">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-xs text-neutral-600">{t("crew", "sampleCreators")}</span>
             <div className="flex-1 h-px bg-white/10" />
@@ -141,19 +140,19 @@ export default function CrewListPage() {
             <Link
               key={member.id}
               href={`/find-crew/${member.id}`}
-              className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 transition-colors group"
+              className="flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-white/5 transition-colors group"
             >
               {/* 头像 */}
               <img
                 src={member.avatarUrl}
                 alt={member.name}
-                className="h-14 w-14 rounded-full object-cover flex-shrink-0 bg-neutral-800"
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover flex-shrink-0 bg-neutral-800"
               />
 
               {/* 信息 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-semibold text-white truncate">
+                  <h3 className="text-sm sm:text-base font-semibold text-white truncate">
                     {member.name}
                   </h3>
                   <span className="inline-block px-2 py-1 text-xs rounded bg-[#5CC8D6]/20 text-[#5CC8D6] flex-shrink-0">

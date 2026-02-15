@@ -92,13 +92,13 @@ export default function FindCrewPage() {
     <section className="relative min-h-screen">
       <PageBackground />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-12">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-12">
         {/* 标题 */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-4xl font-extrabold text-white md:text-5xl"
+          className="text-2xl sm:text-4xl font-extrabold text-white md:text-5xl"
         >
           {t("findCrew", "title")}
         </motion.h1>

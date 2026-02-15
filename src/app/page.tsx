@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { AuthContext } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAutoTranslate, useTranslateEnum } from "@/hooks/useTranslate";
 import {
   fetchRecruitments,
   createRecruitment,
@@ -32,6 +33,125 @@ import {
   type DbRecruitment,
   type DbProfile,
 } from "@/lib/database";
+
+function RecruitmentCard({
+  item,
+  isOwn,
+  isLoggedIn,
+  isApplied,
+  isApplying,
+  isDeleting,
+  t,
+  onApply,
+  onDelete,
+}: {
+  item: DbRecruitment & { poster?: DbProfile };
+  isOwn: boolean;
+  isLoggedIn: boolean;
+  isApplied: boolean;
+  isApplying: boolean;
+  isDeleting: boolean;
+  t: (ns: string, key: string) => string;
+  onApply: () => void;
+  onDelete: () => void;
+}) {
+  const title = useAutoTranslate(item.title);
+  const description = useAutoTranslate(item.description || "");
+  const roleNeeded = useAutoTranslate(item.role_needed);
+  const locationText = useAutoTranslate(item.location || "");
+  const te = useTranslateEnum();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group rounded-xl border border-white/10 bg-white/5 p-5 hover:border-white/20 transition-all"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-white">{title}</h3>
+            <span className="rounded-md bg-[#5CC8D6]/15 px-2 py-0.5 text-xs font-medium text-[#5CC8D6]">
+              {te(item.status)}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-400">
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              {roleNeeded}
+            </span>
+            {item.location && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {locationText}
+              </span>
+            )}
+            {item.shoot_date && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {item.shoot_date}
+              </span>
+            )}
+            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-400">
+              {te(item.compensation)}
+            </span>
+          </div>
+          {item.description && (
+            <p className="mt-2 text-sm text-neutral-400 line-clamp-2">{description}</p>
+          )}
+          <div className="mt-3 flex items-center gap-2">
+            <img
+              src={item.poster ? getAvatarUrl(item.poster) : `https://api.dicebear.com/9.x/adventurer/svg?seed=${item.user_id}`}
+              alt=""
+              className="h-5 w-5 rounded-full bg-neutral-800"
+            />
+            <span className="text-xs text-neutral-500">
+              {item.poster ? getDisplayName(item.poster) : t("common", "unknownUser")}
+            </span>
+            <span className="text-xs text-neutral-600">·</span>
+            <span className="text-xs text-neutral-600">{formatRelativeTime(item.created_at)}</span>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {isLoggedIn && !isOwn && (
+            isApplied ? (
+              <span className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-1.5 text-xs text-green-400 flex items-center gap-1">
+                {t("common", "applied")}
+              </span>
+            ) : (
+              <button
+                onClick={onApply}
+                disabled={isApplying}
+                className="rounded-lg bg-[#5CC8D6]/10 border border-[#5CC8D6]/20 px-3 py-1.5 text-xs text-[#5CC8D6] hover:bg-[#5CC8D6]/20 transition-all flex items-center gap-1 cursor-pointer"
+              >
+                {isApplying ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                {t("common", "apply")}
+              </button>
+            )
+          )}
+          {isLoggedIn && !isOwn && (
+            <Link
+              href={`/find-crew/${item.user_id}`}
+              className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-neutral-300 hover:bg-white/10 transition-all flex items-center gap-1"
+            >
+              <User className="h-3 w-3" />
+              {t("common", "contact")}
+            </Link>
+          )}
+          {isOwn && (
+            <button
+              onClick={onDelete}
+              disabled={isDeleting}
+              className="rounded-lg bg-red-500/10 border border-red-500/20 p-1.5 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const { user, session, userProfile } = useContext(AuthContext);
@@ -133,7 +253,7 @@ export default function Home() {
       {/* 背景 */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,rgba(92,200,214,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-24 pb-16">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 pt-20 sm:pt-24 pb-12 sm:pb-16">
         {/* ========== iOS 小组件风格 Hero ========== */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {/* 主卡片 */}
@@ -151,16 +271,16 @@ export default function Home() {
                 {t("home", "heroSubtitle")}
               </p>
             </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Link href="/find-crew" className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
+            <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
+              <Link href="/find-crew" className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
                 <Users className="h-4 w-4" />
                 {t("home", "recruitPartner")}
               </Link>
-              <Link href="/projects" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
+              <Link href="/projects" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-all">
                 <Megaphone className="h-4 w-4" />
                 {t("home", "board")}
               </Link>
-              <Link href="/plans" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
+              <Link href="/plans" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-white/10 transition-all">
                 <ClipboardList className="h-4 w-4" />
                 {t("home", "myPlans")}
               </Link>
@@ -235,8 +355,8 @@ export default function Home() {
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
-                  <Briefcase className="h-8 w-8 text-[#5CC8D6]" />
+                <h2 className="text-xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
+                  <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 text-[#5CC8D6]" />
                   {t("home", "recruitmentSection")}
                 </h2>
                 <p className="mt-2 text-neutral-400">
@@ -246,7 +366,7 @@ export default function Home() {
               {session && (
                 <button
                   onClick={() => setShowPostForm(!showPostForm)}
-                  className="flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all cursor-pointer"
+                  className="flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
                   {t("home", "postRecruitment")}
@@ -288,7 +408,7 @@ export default function Home() {
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50"
                     />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input
                         type="text"
                         value={postForm.role_needed}
@@ -305,7 +425,7 @@ export default function Home() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <select
                         value={postForm.compensation}
                         onChange={(e) => setPostForm((p) => ({ ...p, compensation: e.target.value }))}
@@ -386,121 +506,18 @@ export default function Home() {
             ) : (
               <div className="space-y-4">
                 {recruitments.map((item) => (
-                  <motion.div
+                  <RecruitmentCard
                     key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="group rounded-xl border border-white/10 bg-white/5 p-5 hover:border-white/20 transition-all"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        {/* 标题行 */}
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h3 className="text-base font-semibold text-white">
-                            {item.title}
-                          </h3>
-                          <span className="rounded-md bg-[#5CC8D6]/15 px-2 py-0.5 text-xs font-medium text-[#5CC8D6]">
-                            {item.status}
-                          </span>
-                        </div>
-
-                        {/* 标签信息 */}
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-400">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {item.role_needed}
-                          </span>
-                          {item.location && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {item.location}
-                            </span>
-                          )}
-                          {item.shoot_date && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {item.shoot_date}
-                            </span>
-                          )}
-                          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-400">
-                            {item.compensation}
-                          </span>
-                        </div>
-
-                        {/* 描述 */}
-                        {item.description && (
-                          <p className="mt-2 text-sm text-neutral-400 line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-
-                        {/* 发布者 */}
-                        <div className="mt-3 flex items-center gap-2">
-                          <img
-                            src={item.poster ? getAvatarUrl(item.poster) : `https://api.dicebear.com/9.x/adventurer/svg?seed=${item.user_id}`}
-                            alt=""
-                            className="h-5 w-5 rounded-full bg-neutral-800"
-                          />
-                          <span className="text-xs text-neutral-500">
-                            {item.poster ? getDisplayName(item.poster) : t("common", "unknownUser")}
-                          </span>
-                          <span className="text-xs text-neutral-600">·</span>
-                          <span className="text-xs text-neutral-600">
-                            {formatRelativeTime(item.created_at)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* 操作区 */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        {/* 申请按钮 */}
-                        {session && user?.id !== item.user_id && (
-                          appliedIds.has(item.id) ? (
-                            <span className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-1.5 text-xs text-green-400 flex items-center gap-1">
-                              {t("common", "applied")}
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handleApply(item.id)}
-                              disabled={applyingId === item.id}
-                              className="rounded-lg bg-[#5CC8D6]/10 border border-[#5CC8D6]/20 px-3 py-1.5 text-xs text-[#5CC8D6] hover:bg-[#5CC8D6]/20 transition-all flex items-center gap-1 cursor-pointer"
-                            >
-                              {applyingId === item.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Plus className="h-3 w-3" />
-                              )}
-                              {t("common", "apply")}
-                            </button>
-                          )
-                        )}
-                        {/* 联系按钮 */}
-                        {session && user?.id !== item.user_id && (
-                          <Link
-                            href={`/find-crew/${item.user_id}`}
-                            className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-neutral-300 hover:bg-white/10 transition-all flex items-center gap-1"
-                          >
-                            <User className="h-3 w-3" />
-                            {t("common", "contact")}
-                          </Link>
-                        )}
-                        {/* 删除按钮（仅自己可见） */}
-                        {user?.id === item.user_id && (
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            disabled={deletingId === item.id}
-                            className="rounded-lg bg-red-500/10 border border-red-500/20 p-1.5 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
-                          >
-                            {deletingId === item.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
+                    item={item}
+                    isOwn={user?.id === item.user_id}
+                    isLoggedIn={!!session}
+                    isApplied={appliedIds.has(item.id)}
+                    isApplying={applyingId === item.id}
+                    isDeleting={deletingId === item.id}
+                    t={t}
+                    onApply={() => handleApply(item.id)}
+                    onDelete={() => handleDelete(item.id)}
+                  />
                 ))}
               </div>
             )}
