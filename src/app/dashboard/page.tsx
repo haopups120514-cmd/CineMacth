@@ -7,7 +7,6 @@ import Link from "next/link";
 import {
   LogOut,
   User,
-  Zap,
   ArrowRight,
   Users,
   Megaphone,

@@ -26,11 +26,21 @@ export interface DbMessage {
   sender_id: string;
   receiver_id: string;
   content: string;
+  content_type: string; // 'text' | 'image' | 'sticker'
+  media_url: string;
   is_read: boolean;
   created_at: string;
   // 关联数据
   sender?: DbProfile;
   receiver?: DbProfile;
+}
+
+export interface DbSticker {
+  id: string;
+  user_id: string;
+  image_url: string;
+  name: string;
+  created_at: string;
 }
 
 export interface DbPortfolio {
@@ -182,13 +192,17 @@ export async function fetchProfileById(userId: string): Promise<DbProfile | null
 export async function sendMessage(
   senderId: string,
   receiverId: string,
-  content: string
+  content: string,
+  contentType: string = "text",
+  mediaUrl: string = ""
 ): Promise<DbMessage | null> {
-  // 先检查频率限制
-  const rateCheck = await checkMessageRateLimit(senderId, receiverId);
-  if (!rateCheck.allowed) {
-    console.warn("私信频率限制:", rateCheck.reason);
-    return null;
+  // 文本消息检查频率限制
+  if (contentType === "text") {
+    const rateCheck = await checkMessageRateLimit(senderId, receiverId);
+    if (!rateCheck.allowed) {
+      console.warn("私信频率限制:", rateCheck.reason);
+      return null;
+    }
   }
 
   const { data, error } = await supabase
@@ -197,6 +211,8 @@ export async function sendMessage(
       sender_id: senderId,
       receiver_id: receiverId,
       content,
+      content_type: contentType,
+      media_url: mediaUrl,
     })
     .select()
     .single();
@@ -1076,4 +1092,63 @@ async function updateCreditScore(userId: string): Promise<void> {
     .from("profiles")
     .update({ credit_score: creditScore })
     .eq("id", userId);
+}
+
+// ==================== 表情包 ====================
+
+/**
+ * 获取用户的自定义表情包
+ */
+export async function fetchUserStickers(userId: string): Promise<DbSticker[]> {
+  const { data, error } = await supabase
+    .from("stickers")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("获取表情包失败:", error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * 上传自定义表情包
+ */
+export async function uploadSticker(
+  userId: string,
+  imageUrl: string,
+  name: string = ""
+): Promise<DbSticker | null> {
+  const { data, error } = await supabase
+    .from("stickers")
+    .insert({ user_id: userId, image_url: imageUrl, name })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("上传表情包失败:", error);
+    return null;
+  }
+
+  return data;
+}
+
+/**
+ * 删除表情包
+ */
+export async function deleteSticker(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("stickers")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("删除表情包失败:", error);
+    return false;
+  }
+
+  return true;
 }

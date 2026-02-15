@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Smile, ImageIcon, Paperclip } from "lucide-react";
+import { X, Send, Smile, ImageIcon } from "lucide-react";
 
 interface Message {
   id: string;
@@ -252,9 +252,6 @@ export default function MessagePanel({
             {/* 输入区域 */}
             <div className="border-t border-white/10 bg-white/5 px-4 py-3">
               <div className="flex items-center gap-2">
-                <button className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
-                  <Paperclip className="h-4 w-4" />
-                </button>
                 <button className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer">
                   <ImageIcon className="h-4 w-4" />
                 </button>
