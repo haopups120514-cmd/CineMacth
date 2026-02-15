@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <main className="pt-16">
               {children}
             </main>
+            <Footer />
           </AuthProvider>
         </LanguageProvider>
       </body>

@@ -1460,3 +1460,112 @@ export async function deleteSticker(id: string): Promise<boolean> {
 
   return true;
 }
+
+// ==================== 公告系统 ====================
+
+// 管理员邮箱列表
+const ADMIN_EMAILS = ["haopups120514@gmail.com"];
+
+export function isAdmin(email: string | undefined | null): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email);
+}
+
+export interface DbAnnouncement {
+  id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  priority: "normal" | "important" | "urgent";
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+  author?: DbProfile;
+}
+
+/**
+ * 获取所有公告（按置顶+时间排序）
+ */
+export async function fetchAnnouncements(): Promise<DbAnnouncement[]> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("*, author:profiles!announcements_author_id_fkey(*)")
+    .order("is_pinned", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("获取公告失败:", error);
+    return [];
+  }
+  return (data as DbAnnouncement[]) || [];
+}
+
+/**
+ * 创建公告
+ */
+export async function createAnnouncement(params: {
+  author_id: string;
+  title: string;
+  content: string;
+  priority?: "normal" | "important" | "urgent";
+  is_pinned?: boolean;
+}): Promise<DbAnnouncement | null> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .insert({
+      author_id: params.author_id,
+      title: params.title,
+      content: params.content,
+      priority: params.priority || "normal",
+      is_pinned: params.is_pinned || false,
+    })
+    .select("*, author:profiles!announcements_author_id_fkey(*)")
+    .single();
+
+  if (error) {
+    console.error("创建公告失败:", error);
+    return null;
+  }
+  return data as DbAnnouncement;
+}
+
+/**
+ * 更新公告
+ */
+export async function updateAnnouncement(
+  id: string,
+  params: {
+    title?: string;
+    content?: string;
+    priority?: "normal" | "important" | "urgent";
+    is_pinned?: boolean;
+  }
+): Promise<boolean> {
+  const { error } = await supabase
+    .from("announcements")
+    .update({ ...params, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    console.error("更新公告失败:", error);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * 删除公告
+ */
+export async function deleteAnnouncement(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("announcements")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("删除公告失败:", error);
+    return false;
+  }
+  return true;
+}
+

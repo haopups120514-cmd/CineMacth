@@ -19,6 +19,7 @@ export default function Navbar() {
     { label: t("nav", "talent"), href: "/crew" },
     { label: t("nav", "opportunities"), href: "/projects" },
     { label: t("nav", "plans"), href: "/plans" },
+    { label: t("nav", "announcements"), href: "/announcements" },
     { label: t("nav", "about"), href: "/about" },
   ];
 
