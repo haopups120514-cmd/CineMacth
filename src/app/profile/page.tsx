@@ -9,7 +9,7 @@ import { AuthContext } from "@/contexts/AuthContext";
 import PageBackground from "@/components/PageBackground";
 import PortfolioUpload from "@/components/PortfolioUpload";
 import { supabase } from "@/lib/supabase";
-import { fetchUserPortfolios, type DbPortfolio } from "@/lib/database";
+import { fetchUserPortfolios, uploadToCloudinary, type DbPortfolio } from "@/lib/database";
 import {
   generateRandomUsername,
   isValidUsername,
@@ -51,6 +51,8 @@ export default function ProfilePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState("");
@@ -158,15 +160,50 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setAvatarError("");
+
+    // 文件类型检查
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setAvatarError("仅支持 JPG、PNG、WebP、GIF 格式");
+      return;
+    }
+
+    // 文件大小检查
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarError(`文件过大（${(file.size / 1024 / 1024).toFixed(1)}MB），最大 5MB`);
+      return;
+    }
+
+    // 预览
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // 立即上传到 Cloudinary
+    setAvatarUploading(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      if (url) {
+        setAvatarFile(null); // 清除文件，使用 Cloudinary URL
+        setFormData((prev) => ({ ...prev, avatar_url: url }));
+      } else {
+        setAvatarError("头像上传失败，请检查网络后重试");
+        setAvatarPreview(""); // 清除预览
+      }
+    } catch {
+      setAvatarError("头像上传失败，请稍后重试");
+      setAvatarPreview(""); // 清除预览
+    } finally {
+      setAvatarUploading(false);
     }
   };
 
@@ -200,25 +237,7 @@ export default function ProfilePage() {
     }
 
     try {
-      let avatar_url = formData.avatar_url;
-
-      // 上传头像如果有新文件
-      if (avatarFile) {
-        const fileExt = avatarFile.name.split(".").pop();
-        const fileName = `${user?.id}/avatar.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, avatarFile, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(fileName);
-
-        avatar_url = publicUrlData.publicUrl;
-      }
+      const avatar_url = formData.avatar_url;
 
       // 特殊处理：如果用户名被修改，记录修改时间
       const updateData: any = {
@@ -346,15 +365,36 @@ export default function ProfilePage() {
             <div className="flex gap-4 items-start">
               {/* 头像预览 */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-xl border border-white/10 bg-white/5 overflow-hidden flex items-center justify-center">
+                <div className="w-24 h-24 rounded-xl border border-white/10 bg-white/5 overflow-hidden flex items-center justify-center relative">
+                  {avatarUploading && (
+                    <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+                      <div className="h-6 w-6 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
+                    </div>
+                  )}
                   {avatarPreview ? (
                     <img
                       src={avatarPreview}
                       alt="头像预览"
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`;
+                      }}
+                    />
+                  ) : formData.avatar_url ? (
+                    <img
+                      src={formData.avatar_url}
+                      alt="当前头像"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`;
+                      }}
                     />
                   ) : (
-                    <div className="text-white/30 text-3xl">无</div>
+                    <img
+                      src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
+                      alt="默认头像"
+                      className="w-full h-full object-cover"
+                    />
                   )}
                 </div>
               </div>
@@ -364,20 +404,37 @@ export default function ProfilePage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base font-semibold text-white hover:bg-white/10 transition-all"
+                  disabled={avatarUploading}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base font-semibold text-white hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  <Upload className="h-5 w-5" />
-                  选择头像
+                  {avatarUploading ? (
+                    <>
+                      <div className="h-5 w-5 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5" />
+                      选择头像
+                    </>
+                  )}
                 </button>
-                <p className="mt-2 text-xs text-neutral-500">
-                  支持 JPG、PNG 格式，大小不超过 10MB
-                </p>
+                {avatarError ? (
+                  <p className="mt-2 text-xs text-red-400 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    {avatarError}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-neutral-500">
+                    支持 JPG、PNG、WebP、GIF，最大 5MB，自动压缩
+                  </p>
+                )}
               </div>
             </div>
           </div>
