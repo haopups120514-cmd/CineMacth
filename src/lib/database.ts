@@ -605,15 +605,24 @@ export async function uploadToCloudinary(
   formData.append("upload_preset", uploadPreset);
   formData.append("folder", folder);
 
-  // 判断用 image/upload 还是 auto/upload（HEIC 等格式需要 auto）
-  const isStandardImage = /^image\/(jpeg|png|webp|gif|svg)/.test(file.type);
-  const endpoint = isStandardImage ? "image" : "auto";
+  // iOS 会自动将 HEIC 转为 JPEG，所以多数情况不需要 auto 端点
+  // 但保留 auto 作为兜底（如从 Files app 选择 HEIC）
+  const isStandardImage = /^image\/(jpeg|png|webp|gif|svg|bmp)/.test(file.type);
+  const endpoint = isStandardImage || !file.type ? "image" : "auto";
+
+  console.log(`[上传] ${file.name} (${(file.size/1024).toFixed(0)}KB, ${file.type || 'unknown'}) → ${endpoint}/upload`);
 
   try {
+    // 60s 超时保护（移动网络可能慢）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${cloudName}/${endpoint}/upload`,
-      { method: "POST", body: formData }
+      { method: "POST", body: formData, signal: controller.signal }
     );
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const errorText = await res.text();
@@ -627,88 +636,159 @@ export async function uploadToCloudinary(
       "/upload/",
       `/upload/q_auto,f_auto,w_${maxWidth}/`
     );
+    console.log("[上传✓]", optimizedUrl);
     return optimizedUrl;
-  } catch (err) {
-    console.error("Cloudinary 上传异常:", err);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") {
+      console.error("Cloudinary 上传超时（60s）");
+    } else {
+      console.error("Cloudinary 上传异常:", err);
+    }
     return null;
   }
 }
 
 /**
  * 客户端图片压缩（共享工具函数）
- * 多策略兜底，兼容移动端大图 + HEIC
+ * 专为 iOS Safari 优化：避免内存溢出
+ * 整体超时保护：8秒内未完成则放弃压缩，直传 Cloudinary
  */
 export async function compressImageFile(file: File, maxSize = 800): Promise<File> {
-  // 如果已经很小就不压缩
-  if (file.size < 300 * 1024) return file;
+  // 小文件无需压缩
+  if (file.size < 200 * 1024) return file;
 
-  const drawAndExport = (
-    source: HTMLImageElement | ImageBitmap,
-    naturalW: number,
-    naturalH: number
-  ): Promise<File> => {
+  // 超时保护：压缩卡住时直接返回原文件
+  const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T | null> =>
+    Promise.race([
+      promise,
+      new Promise<null>((r) => setTimeout(() => r(null), ms)),
+    ]);
+
+  // Canvas 绘制 + 导出 JPEG
+  const canvasExport = (bitmap: ImageBitmap): Promise<File | null> => {
     return new Promise((resolve) => {
-      let w = naturalW;
-      let h = naturalH;
-      if (w > h) {
-        if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
-      } else {
-        if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
+      try {
+        let w = bitmap.width;
+        let h = bitmap.height;
+        if (w > h) {
+          if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
+        } else {
+          if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            // 清理 canvas 内存
+            canvas.width = 0;
+            canvas.height = 0;
+            if (blob && blob.size > 0) {
+              resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+            } else {
+              resolve(null);
+            }
+          },
+          "image/jpeg",
+          0.82
+        );
+      } catch {
+        resolve(null);
       }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(file); return; }
-
-      ctx.drawImage(source, 0, 0, w, h);
-      canvas.toBlob(
-        (blob) => {
-          if (blob && blob.size > 0) {
-            resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
-          } else {
-            resolve(file);
-          }
-        },
-        "image/jpeg",
-        0.85
-      );
     });
   };
 
-  // 策略 1: createImageBitmap
+  // ===== 策略 1: createImageBitmap + resize 选项（iOS 15+，最省内存）=====
   if (typeof createImageBitmap === "function") {
     try {
-      const bitmap = await createImageBitmap(file);
-      const result = await drawAndExport(bitmap, bitmap.width, bitmap.height);
-      bitmap.close();
-      return result;
+      // 使用 resize 选项让浏览器在解码阶段缩放
+      // 这样不会将 48MP 原图完整加载到内存
+      const bitmap = await withTimeout(
+        createImageBitmap(file, {
+          resizeWidth: maxSize,
+          resizeQuality: "medium",
+        } as ImageBitmapOptions),
+        5000
+      );
+      if (bitmap) {
+        const result = await canvasExport(bitmap);
+        bitmap.close();
+        if (result) {
+          console.log(`[压缩✓] 策略1(resize) ${(file.size/1024).toFixed(0)}KB → ${(result.size/1024).toFixed(0)}KB`);
+          return result;
+        }
+      }
     } catch (e) {
-      console.warn("createImageBitmap 失败，降级:", e);
+      console.warn("[压缩] 策略1 resize 不支持，降级:", e);
+    }
+
+    // 策略 1b: 不带 resize 选项的 createImageBitmap
+    try {
+      const bitmap = await withTimeout(createImageBitmap(file), 5000);
+      if (bitmap) {
+        const result = await canvasExport(bitmap);
+        bitmap.close();
+        if (result) {
+          console.log(`[压缩✓] 策略1b ${(file.size/1024).toFixed(0)}KB → ${(result.size/1024).toFixed(0)}KB`);
+          return result;
+        }
+      }
+    } catch (e) {
+      console.warn("[压缩] 策略1b 失败:", e);
     }
   }
 
-  // 策略 2: Image + objectURL
+  // ===== 策略 2: Image + objectURL（不太适合 iOS 大图但作为兜底）=====
   try {
-    const result = await new Promise<File>((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = async () => {
-        URL.revokeObjectURL(url);
-        try {
-          resolve(await drawAndExport(img, img.naturalWidth, img.naturalHeight));
-        } catch (e2) { reject(e2); }
-      };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
-      img.src = url;
-    });
-    return result;
+    const result = await withTimeout(
+      new Promise<File | null>((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = async () => {
+          URL.revokeObjectURL(url);
+          try {
+            let w = img.naturalWidth;
+            let h = img.naturalHeight;
+            if (w > h) {
+              if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
+            } else {
+              if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { resolve(null); return; }
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(
+              (blob) => {
+                canvas.width = 0; canvas.height = 0;
+                if (blob && blob.size > 0) {
+                  resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+                } else { resolve(null); }
+              },
+              "image/jpeg", 0.82
+            );
+          } catch { resolve(null); }
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+      }),
+      6000
+    );
+    if (result) {
+      console.log(`[压缩✓] 策略2 ${(file.size/1024).toFixed(0)}KB → ${(result.size/1024).toFixed(0)}KB`);
+      return result;
+    }
   } catch (e) {
-    console.warn("Image 压缩失败，返回原文件:", e);
+    console.warn("[压缩] 策略2 失败:", e);
   }
 
-  // 策略 3: 原文件直接交给 Cloudinary
+  // ===== 策略 3: 直接返回原文件，让 Cloudinary 服务端处理 =====
+  console.log(`[压缩] 全部失败，直传原文件 ${(file.size/1024).toFixed(0)}KB`);
   return file;
 }
 

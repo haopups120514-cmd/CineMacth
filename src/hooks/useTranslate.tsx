@@ -16,7 +16,8 @@ export function useAutoTranslate(text: string, skip = false): string {
   const prevRef = useRef({ text, locale });
 
   useEffect(() => {
-    if (skip || locale === "zh" || !text || !needsTranslation(text, locale)) {
+    // 数据源是中文，所以只在中文 locale 下跳过翻译
+    if (skip || !text || !needsTranslation(text, locale)) {
       setTranslated(text);
       return;
     }
@@ -49,7 +50,14 @@ export function useAutoTranslateBatch(
   const textsKey = texts.join("||");
 
   useEffect(() => {
-    if (skip || locale === "zh" || !texts.length) {
+    if (skip || !texts.length) {
+      setTranslated(texts);
+      return;
+    }
+
+    // 如果所有文本都不需要翻译，跳过
+    const anyNeedsTranslation = texts.some((t) => t && needsTranslation(t, locale));
+    if (!anyNeedsTranslation) {
       setTranslated(texts);
       return;
     }

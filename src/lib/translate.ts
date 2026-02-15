@@ -193,14 +193,18 @@ export async function translateBatch(
 export function needsTranslation(text: string, targetLocale: Locale): boolean {
   if (!text || !text.trim()) return false;
 
-  // 简单启发式检测文本语言
+  // 检测文本中包含的字符类型
   const hasChinese = /[\u4e00-\u9fff]/.test(text);
-  const hasJapanese = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
+  // 日语特有字符：平假名 + 片假名（汉字中日共用，不能用来区分）
+  const hasKana = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
   const hasEnglish = /[a-zA-Z]{3,}/.test(text);
 
-  if (targetLocale === "zh" && hasChinese && !hasJapanese) return false;
-  if (targetLocale === "ja" && (hasJapanese || (hasChinese && !hasEnglish))) return false;
-  if (targetLocale === "en" && hasEnglish && !hasChinese && !hasJapanese) return false;
+  // 中文目标：文本有汉字且没有日语假名 → 已经是中文
+  if (targetLocale === "zh" && hasChinese && !hasKana) return false;
+  // 日语目标：只有文本包含假名才认为已经是日语（共用汉字不算）
+  if (targetLocale === "ja" && hasKana) return false;
+  // 英语目标：纯英文无中日字符 → 已经是英文
+  if (targetLocale === "en" && hasEnglish && !hasChinese && !hasKana) return false;
 
   return true;
 }
