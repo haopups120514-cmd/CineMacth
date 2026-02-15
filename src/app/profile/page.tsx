@@ -166,47 +166,40 @@ export default function ProfilePage() {
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
 
   /**
-   * 客户端图片压缩 — 在上传前将图片缩放到 maxSize 像素，转为 JPEG
-   * 解决手机拍照文件过大导致上传超时的问题
+   * 客户端图片压缩 — 多策略兜底，兼容移动端大图
+   * 策略 1: createImageBitmap (内存占用最低，iOS 15+ 支持)
+   * 策略 2: Image + Canvas 降级
+   * 策略 3: 全部失败则直接返回原文件，让 Cloudinary 服务端处理
    */
-  const compressImage = (file: File, maxSize = 800): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      // 如果已经很小就不压缩
-      if (file.size < 500 * 1024) {
-        resolve(file);
-        return;
-      }
+  const compressImage = async (file: File, maxSize = 400): Promise<File> => {
+    // 如果已经很小就不压缩
+    if (file.size < 300 * 1024) return file;
 
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const canvas = document.createElement("canvas");
-        let { width, height } = img;
-
-        // 按比例缩放
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
-          }
+    // 画布绘制 + 导出
+    const drawAndExport = (
+      source: HTMLImageElement | ImageBitmap,
+      naturalW: number,
+      naturalH: number
+    ): Promise<File> => {
+      return new Promise((resolve) => {
+        let w = naturalW;
+        let h = naturalH;
+        if (w > h) {
+          if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
         } else {
-          if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
-          }
+          if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
         const ctx = canvas.getContext("2d");
         if (!ctx) { resolve(file); return; }
-        ctx.drawImage(img, 0, 0, width, height);
 
+        ctx.drawImage(source, 0, 0, w, h);
         canvas.toBlob(
           (blob) => {
-            if (blob) {
+            if (blob && blob.size > 0) {
               resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
             } else {
               resolve(file);
@@ -215,15 +208,45 @@ export default function ProfilePage() {
           "image/jpeg",
           0.85
         );
-      };
+      });
+    };
 
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Image load failed"));
-      };
+    // ----- 策略 1: createImageBitmap（内存效率最高）-----
+    if (typeof createImageBitmap === "function") {
+      try {
+        const bitmap = await createImageBitmap(file);
+        const result = await drawAndExport(bitmap, bitmap.width, bitmap.height);
+        bitmap.close();
+        return result;
+      } catch (e) {
+        console.warn("createImageBitmap 压缩失败，降级到 Image:", e);
+      }
+    }
 
-      img.src = url;
-    });
+    // ----- 策略 2: Image + objectURL -----
+    try {
+      const result = await new Promise<File>((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = async () => {
+          URL.revokeObjectURL(url);
+          try {
+            const r = await drawAndExport(img, img.naturalWidth, img.naturalHeight);
+            resolve(r);
+          } catch (e2) {
+            reject(e2);
+          }
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+        img.src = url;
+      });
+      return result;
+    } catch (e) {
+      console.warn("Image 压缩也失败，返回原文件:", e);
+    }
+
+    // ----- 策略 3: 直接返回原文件（Cloudinary 服务端 resize）-----
+    return file;
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,8 +274,9 @@ export default function ProfilePage() {
     // 压缩 + 上传
     setAvatarUploading(true);
     try {
-      // 客户端压缩到 800px，转 JPEG
-      const compressed = await compressImage(file, 800);
+      // 客户端压缩到 400px（头像不需要太大），转 JPEG
+      const compressed = await compressImage(file, 400);
+      console.log(`头像压缩: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB`);
 
       const url = await uploadToCloudinary(compressed, "cinematch-avatars", 400);
       if (url) {
@@ -262,7 +286,8 @@ export default function ProfilePage() {
         setAvatarError(t("profile", "avatarUploadFailed"));
         setAvatarPreview("");
       }
-    } catch {
+    } catch (err) {
+      console.error("头像上传异常:", err);
       setAvatarError(t("profile", "avatarUploadError"));
       setAvatarPreview("");
     } finally {
