@@ -866,6 +866,7 @@ export async function applyToRecruitment(
           applicantName: applicant ? getDisplayName(applicant) : "Someone",
           recruitmentTitle: recruitment.title,
           applicationMessage: message,
+          locale: poster.preferred_locale || "zh",
         });
       }
     } catch {

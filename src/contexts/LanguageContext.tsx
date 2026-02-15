@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { translations, type Locale } from "@/i18n/translations";
+import { supabase } from "@/lib/supabase";
 
 interface LanguageContextType {
   locale: Locale;
@@ -38,6 +39,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("cinematch-locale", newLocale);
     // 更新 html lang 属性
     document.documentElement.lang = newLocale === "zh" ? "zh" : newLocale === "ja" ? "ja" : "en";
+
+    // 同步语言偏好到数据库（已登录用户）
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ preferred_locale: newLocale })
+            .eq("id", user.id);
+        }
+      } catch {
+        // 静默失败，不影响本地切换
+      }
+    })();
   }, []);
 
   const t = useCallback(
