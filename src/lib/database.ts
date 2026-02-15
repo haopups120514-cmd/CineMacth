@@ -90,7 +90,12 @@ export interface DbReview {
   reviewer_id: string;
   reviewee_id: string;
   recruitment_id: string;
-  rating: number;
+  rating: number; // 总评分 1-5（由各维度计算）
+  punctuality: number; // 守时度 1-5
+  professionalism: number; // 专业度 1-5
+  skill: number; // 技能 1-5
+  communication: number; // 沟通 1-5
+  reliability: number; // 可靠性 1-5
   comment: string;
   created_at: string;
   // 关联
@@ -909,6 +914,30 @@ export async function deleteRecruitment(id: string): Promise<boolean> {
 }
 
 /**
+ * 根据 ID 获取单条招聘信息（含发布者信息）
+ */
+export async function fetchRecruitmentById(id: string): Promise<(DbRecruitment & { poster?: DbProfile }) | null> {
+  const { data, error } = await supabase
+    .from("recruitments")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !data) {
+    console.error("获取招聘详情失败:", error);
+    return null;
+  }
+
+  const { data: poster } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user_id)
+    .single();
+
+  return { ...data, poster: poster || undefined };
+}
+
+/**
  * 更新招聘状态
  */
 export async function updateRecruitmentStatus(id: string, status: string): Promise<boolean> {
@@ -1183,18 +1212,27 @@ export async function checkIfApplied(
 // ==================== 评分系统 ====================
 
 /**
- * 提交评分
+ * 提交评分（多维度）
  */
 export async function submitReview(item: {
   reviewer_id: string;
   reviewee_id: string;
   recruitment_id: string;
-  rating: number;
+  punctuality: number;
+  professionalism: number;
+  skill: number;
+  communication: number;
+  reliability: number;
   comment?: string;
 }): Promise<DbReview | null> {
+  // 计算总评分（5维度平均）
+  const rating = Math.round(
+    ((item.punctuality + item.professionalism + item.skill + item.communication + item.reliability) / 5) * 10
+  ) / 10;
+
   const { data, error } = await supabase
     .from("reviews")
-    .insert(item)
+    .insert({ ...item, rating })
     .select()
     .single();
 
@@ -1203,7 +1241,7 @@ export async function submitReview(item: {
     return null;
   }
 
-  // 更新被评分者的信用分（根据评分调整）
+  // 更新被评分者的信用分
   await updateCreditScore(item.reviewee_id);
 
   return data;
@@ -1313,12 +1351,12 @@ export async function canReview(
 }
 
 /**
- * 更新用户信用分（基于收到的评分平均值）
+ * 更新用户信用分（基于收到的评分各维度平均值综合计算）
  */
 async function updateCreditScore(userId: string): Promise<void> {
   const { data: reviews } = await supabase
     .from("reviews")
-    .select("rating")
+    .select("rating, punctuality, professionalism, skill, communication, reliability")
     .eq("reviewee_id", userId);
 
   if (!reviews || reviews.length === 0) return;
@@ -1331,6 +1369,37 @@ async function updateCreditScore(userId: string): Promise<void> {
     .from("profiles")
     .update({ credit_score: creditScore })
     .eq("id", userId);
+}
+
+/**
+ * 获取用户的多维度评分统计
+ */
+export async function fetchUserRatingStats(userId: string): Promise<{
+  overall: number;
+  punctuality: number;
+  professionalism: number;
+  skill: number;
+  communication: number;
+  reliability: number;
+  totalReviews: number;
+} | null> {
+  const { data: reviews } = await supabase
+    .from("reviews")
+    .select("rating, punctuality, professionalism, skill, communication, reliability")
+    .eq("reviewee_id", userId);
+
+  if (!reviews || reviews.length === 0) return null;
+
+  const n = reviews.length;
+  return {
+    overall: Math.round((reviews.reduce((s, r) => s + r.rating, 0) / n) * 10) / 10,
+    punctuality: Math.round((reviews.reduce((s, r) => s + r.punctuality, 0) / n) * 10) / 10,
+    professionalism: Math.round((reviews.reduce((s, r) => s + r.professionalism, 0) / n) * 10) / 10,
+    skill: Math.round((reviews.reduce((s, r) => s + r.skill, 0) / n) * 10) / 10,
+    communication: Math.round((reviews.reduce((s, r) => s + r.communication, 0) / n) * 10) / 10,
+    reliability: Math.round((reviews.reduce((s, r) => s + r.reliability, 0) / n) * 10) / 10,
+    totalReviews: n,
+  };
 }
 
 // ==================== 表情包 ====================

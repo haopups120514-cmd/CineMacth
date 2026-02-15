@@ -168,8 +168,9 @@ export default function ProjectsPage() {
                   key={item.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="group rounded-xl border border-white/10 bg-white/5 p-5 hover:border-white/20 transition-all backdrop-blur-sm"
+                  className="group rounded-xl border border-white/10 bg-white/5 p-5 hover:border-white/20 transition-all backdrop-blur-sm cursor-pointer"
                 >
+                  <Link href={`/projects/r/${item.id}`} className="block">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       {/* 标题行 */}
@@ -230,7 +231,7 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* 操作区 */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.preventDefault()}>
                       {session && user?.id !== item.user_id && (
                         <Link
                           href={`/find-crew/${item.user_id}`}
@@ -242,7 +243,7 @@ export default function ProjectsPage() {
                       )}
                       {user?.id === item.user_id && (
                         <button
-                          onClick={() => handleDelete(item.id)}
+                          onClick={(e) => { e.preventDefault(); handleDelete(item.id); }}
                           disabled={deletingId === item.id}
                           className="rounded-lg bg-red-500/10 border border-red-500/20 p-1.5 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
                         >
@@ -255,6 +256,7 @@ export default function ProjectsPage() {
                       )}
                     </div>
                   </div>
+                  </Link>
                 </motion.div>
               ))}
             </div>

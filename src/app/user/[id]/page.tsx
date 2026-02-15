@@ -6,7 +6,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { fetchUserReviews, fetchUserRatingStats, type DbReview, type DbProfile, type DbRecruitment } from "@/lib/database";
 import PageBackground from "@/components/PageBackground";
+import CreditScoreCardDB from "@/components/CreditScoreCardDB";
+import CreditAnalysisModal from "@/components/CreditAnalysisModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAutoTranslate, useTranslateEnum } from "@/hooks/useTranslate";
 
@@ -20,6 +23,7 @@ interface UserProfile {
   equipment: string;
   styles: string[];
   avatar_url: string;
+  credit_score: number;
 }
 
 export default function UserProfilePage() {
@@ -28,6 +32,12 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<(DbReview & { reviewer?: DbProfile; recruitment?: DbRecruitment })[]>([]);
+  const [ratingStats, setRatingStats] = useState<{
+    overall: number; punctuality: number; professionalism: number;
+    skill: number; communication: number; reliability: number; totalReviews: number;
+  } | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const { t } = useLanguage();
   const te = useTranslateEnum();
   const translatedBio = useAutoTranslate(profile?.bio || "");
@@ -48,6 +58,13 @@ export default function UserProfilePage() {
 
         if (data) {
           setProfile(data);
+          // 加载评价和统计
+          const [reviewsData, statsData] = await Promise.all([
+            fetchUserReviews(data.id),
+            fetchUserRatingStats(data.id),
+          ]);
+          setReviews(reviewsData);
+          setRatingStats(statsData);
         }
       } catch (err) {
         setError(t("userPage", "loadFailed"));
@@ -200,6 +217,31 @@ export default function UserProfilePage() {
             </p>
           </div>
         </motion.div>
+
+        {/* 信用分 & 评价 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-6"
+        >
+          <CreditScoreCardDB
+            creditScore={profile.credit_score ?? 80}
+            reviews={reviews}
+            stats={ratingStats}
+            onAnalyze={ratingStats ? () => setShowAnalysis(true) : undefined}
+          />
+        </motion.div>
+
+        {/* 信用分分析弹窗 */}
+        {ratingStats && (
+          <CreditAnalysisModal
+            isOpen={showAnalysis}
+            onClose={() => setShowAnalysis(false)}
+            stats={ratingStats}
+            creditScore={profile.credit_score ?? 80}
+          />
+        )}
       </div>
     </section>
   );

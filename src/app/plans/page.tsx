@@ -18,6 +18,7 @@ import {
   User,
 } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
+import RatingModal from "@/components/RatingModal";
 import { AuthContext } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -26,9 +27,7 @@ import {
   fetchApplicationsByRecruitment,
   updateApplicationStatus,
   updateRecruitmentStatus,
-  submitReview,
   checkIfReviewed,
-  canReview,
   getDisplayName,
   getAvatarUrl,
   formatRelativeTime,
@@ -89,9 +88,6 @@ export default function PlansPage() {
     revieweeId: string;
     revieweeName: string;
   } | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
-  const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedPairs, setReviewedPairs] = useState<Set<string>>(new Set());
 
   const loadMyPosts = useCallback(async () => {
@@ -176,43 +172,15 @@ export default function PlansPage() {
     setUpdatingId(null);
   };
 
-  // 提交评分
-  const handleSubmitReview = async () => {
-    if (!user || !showReviewForm) return;
-    setSubmittingReview(true);
-
-    // 验证评分资格
-    const eligible = await canReview(
-      user.id,
-      showReviewForm.revieweeId,
-      showReviewForm.recruitmentId
-    );
-
-    if (!eligible) {
-      alert(t("plans", "rateOnlyCompleted"));
-      setSubmittingReview(false);
-      return;
-    }
-
-    const result = await submitReview({
-      reviewer_id: user.id,
-      reviewee_id: showReviewForm.revieweeId,
-      recruitment_id: showReviewForm.recruitmentId,
-      rating: reviewRating,
-      comment: reviewComment,
-    });
-
-    if (result) {
+  // 评分提交回调
+  const handleReviewSubmitted = () => {
+    if (showReviewForm) {
       setReviewedPairs((prev) => {
         const next = new Set(prev);
         next.add(`${showReviewForm.recruitmentId}:${showReviewForm.revieweeId}`);
         return next;
       });
-      setShowReviewForm(null);
-      setReviewRating(5);
-      setReviewComment("");
     }
-    setSubmittingReview(false);
   };
 
   if (!session) {
@@ -591,82 +559,17 @@ export default function PlansPage() {
       </div>
 
       {/* ========== 评分弹窗 ========== */}
-      <AnimatePresence>
-        {showReviewForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-6"
-            onClick={() => setShowReviewForm(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111318] p-6"
-            >
-              <h3 className="text-lg font-bold text-white mb-1">{t("plans", "ratePartner")}</h3>
-              <p className="text-sm text-neutral-400 mb-6">
-                为 <span className="text-[#5CC8D6]">{showReviewForm.revieweeName}</span> 评分
-              </p>
-
-              {/* 星级评分 */}
-              <div className="flex items-center gap-2 mb-6">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setReviewRating(star)}
-                    className="cursor-pointer transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`h-8 w-8 ${
-                        star <= reviewRating
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-neutral-600"
-                      }`}
-                    />
-                  </button>
-                ))}
-                <span className="ml-2 text-sm text-neutral-400">{reviewRating}/5</span>
-              </div>
-
-              {/* 评价文字 */}
-              <textarea
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                placeholder={t("plans", "reviewPlaceholder")}
-                rows={3}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50 resize-none mb-4"
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowReviewForm(null)}
-                  className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-neutral-400 hover:bg-white/5 transition-all cursor-pointer"
-                >
-                  {t("common", "cancel")}
-                </button>
-                <button
-                  onClick={handleSubmitReview}
-                  disabled={submittingReview}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#5CC8D6] py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {submittingReview ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Star className="h-4 w-4" />
-                      {t("plans", "submitRating")}
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showReviewForm && (
+        <RatingModal
+          isOpen={!!showReviewForm}
+          onClose={() => setShowReviewForm(null)}
+          onSubmitted={handleReviewSubmitted}
+          reviewerId={user!.id}
+          revieweeId={showReviewForm.revieweeId}
+          revieweeName={showReviewForm.revieweeName}
+          recruitmentId={showReviewForm.recruitmentId}
+        />
+      )}
     </section>
   );
 }

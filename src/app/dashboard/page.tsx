@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -13,22 +13,44 @@ import {
   Heart,
   MessageCircle,
   Shield,
-  Upload
+  Upload,
+  Star,
 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageBackground from "@/components/PageBackground";
+import CreditScoreCardDB from "@/components/CreditScoreCardDB";
+import CreditAnalysisModal from "@/components/CreditAnalysisModal";
+import { fetchUserReviews, fetchUserRatingStats, type DbReview, type DbProfile, type DbRecruitment } from "@/lib/database";
 
 export default function DashboardPage() {
   const { user, session, signOut, loading, userProfile } = useContext(AuthContext);
   const { t } = useLanguage();
   const router = useRouter();
+  const [reviews, setReviews] = useState<(DbReview & { reviewer?: DbProfile; recruitment?: DbRecruitment })[]>([]);
+  const [ratingStats, setRatingStats] = useState<{
+    overall: number; punctuality: number; professionalism: number;
+    skill: number; communication: number; reliability: number; totalReviews: number;
+  } | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) {
       router.push("/login");
     }
   }, [session, loading, router]);
+
+  useEffect(() => {
+    if (user) {
+      Promise.all([
+        fetchUserReviews(user.id),
+        fetchUserRatingStats(user.id),
+      ]).then(([r, s]) => {
+        setReviews(r);
+        setRatingStats(s);
+      });
+    }
+  }, [user]);
 
   if (loading || !session) {
     return (
@@ -194,6 +216,31 @@ export default function DashboardPage() {
             </Link>
           </div>
         </motion.div>
+
+        {/* 信用分 & 评价 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mt-8"
+        >
+          <CreditScoreCardDB
+            creditScore={userProfile?.credit_score ?? 80}
+            reviews={reviews}
+            stats={ratingStats}
+            onAnalyze={ratingStats ? () => setShowAnalysis(true) : undefined}
+          />
+        </motion.div>
+
+        {/* 信用分分析弹窗 */}
+        {ratingStats && (
+          <CreditAnalysisModal
+            isOpen={showAnalysis}
+            onClose={() => setShowAnalysis(false)}
+            stats={ratingStats}
+            creditScore={userProfile?.credit_score ?? 80}
+          />
+        )}
 
         {/* 关于平台 */}
         <motion.div
