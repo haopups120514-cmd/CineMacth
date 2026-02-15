@@ -804,14 +804,29 @@ export async function fetchAllRecruitments(): Promise<(DbRecruitment & { poster?
  */
 async function sendNotification(type: string, data: Record<string, string>) {
   try {
-    await fetch("/api/notify", {
+    const siteUrl = typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || "");
+
+    const url = `${siteUrl}/api/notify`;
+    console.log("[通知] 正在发送邮件通知:", { type, to: data.posterEmail, url });
+
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, data }),
     });
-  } catch {
-    // 邮件发送失败不影响主流程
-    console.warn("通知邮件发送失败，不影响申请");
+
+    const result = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      console.error("[通知] API 返回错误:", res.status, result);
+      return;
+    }
+
+    console.log("[通知] 邮件发送成功:", result);
+  } catch (err) {
+    console.error("[通知] 邮件发送异常:", err);
   }
 }
 
@@ -848,7 +863,10 @@ export async function applyToRecruitment(
         .eq("id", recruitmentId)
         .single();
 
-      if (!recruitment) return;
+      if (!recruitment) {
+        console.warn("[通知] 找不到招聘信息:", recruitmentId);
+        return;
+      }
 
       // 获取发布者和申请者资料
       const [posterResult, applicantResult] = await Promise.all([
@@ -859,8 +877,10 @@ export async function applyToRecruitment(
       const poster = posterResult.data;
       const applicant = applicantResult.data;
 
+      console.log("[通知] 发布者:", poster?.email, "申请者:", applicant?.display_name || applicant?.username);
+
       if (poster?.email) {
-        sendNotification("recruitment_application", {
+        await sendNotification("recruitment_application", {
           posterEmail: poster.email,
           posterName: getDisplayName(poster),
           applicantName: applicant ? getDisplayName(applicant) : "Someone",
@@ -868,9 +888,11 @@ export async function applyToRecruitment(
           applicationMessage: message,
           locale: poster.preferred_locale || "zh",
         });
+      } else {
+        console.warn("[通知] 发布者没有 email，跳过通知:", recruitment.user_id);
       }
-    } catch {
-      // 忽略通知错误
+    } catch (err) {
+      console.error("[通知] 通知流程异常:", err);
     }
   })();
 

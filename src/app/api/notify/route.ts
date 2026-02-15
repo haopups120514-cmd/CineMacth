@@ -58,8 +58,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { type, data } = body;
+    console.log("[notify] 收到通知请求:", type, "to:", data?.posterEmail);
 
     if (!process.env.RESEND_API_KEY) {
+      console.error("[notify] RESEND_API_KEY 未配置");
       return NextResponse.json(
         { error: "Email service not configured" },
         { status: 503 }
@@ -142,13 +144,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (error) {
-          console.error("Failed to send email:", error);
+          console.error("[notify] Resend API 错误:", JSON.stringify(error));
           return NextResponse.json(
-            { error: "Failed to send email" },
+            { error: "Failed to send email", detail: error },
             { status: 500 }
           );
         }
 
+        console.log("[notify] 邮件发送成功 → ", posterEmail);
         return NextResponse.json({ success: true });
       }
 
@@ -159,9 +162,9 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error("Notification API error:", error);
+    console.error("[notify] 未捕获异常:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", detail: String(error) },
       { status: 500 }
     );
   }
