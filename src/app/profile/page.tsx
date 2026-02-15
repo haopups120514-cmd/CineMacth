@@ -162,8 +162,69 @@ export default function ProfilePage() {
     }));
   };
 
-  const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_AVATAR_SIZE = 20 * 1024 * 1024; // 20MB（压缩前原图限制）
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
+
+  /**
+   * 客户端图片压缩 — 在上传前将图片缩放到 maxSize 像素，转为 JPEG
+   * 解决手机拍照文件过大导致上传超时的问题
+   */
+  const compressImage = (file: File, maxSize = 800): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      // 如果已经很小就不压缩
+      if (file.size < 500 * 1024) {
+        resolve(file);
+        return;
+      }
+
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+
+        // 按比例缩放
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width);
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height);
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image load failed"));
+      };
+
+      img.src = url;
+    });
+  };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -171,39 +232,39 @@ export default function ProfilePage() {
 
     setAvatarError("");
 
-    // 文件类型检查
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // 文件类型检查（兼容 HEIC/HEIF）
+    const isImage = file.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp|gif)$/i.test(file.name);
+    if (!isImage) {
       setAvatarError(t("profile", "avatarFormatError"));
       return;
     }
 
-    // 文件大小检查
+    // 文件大小检查（压缩前）
     if (file.size > MAX_AVATAR_SIZE) {
-      setAvatarError(`文件过大（${(file.size / 1024 / 1024).toFixed(1)}MB），最大 5MB`);
+      setAvatarError(t("profile", "avatarSizeError") || `文件过大（${(file.size / 1024 / 1024).toFixed(1)}MB），最大 20MB`);
       return;
     }
 
-    // 预览
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // 立即显示预览（使用 createObjectURL 比 FileReader 快）
+    setAvatarPreview(URL.createObjectURL(file));
 
-    // 立即上传到 Cloudinary
+    // 压缩 + 上传
     setAvatarUploading(true);
     try {
-      const url = await uploadToCloudinary(file);
+      // 客户端压缩到 800px，转 JPEG
+      const compressed = await compressImage(file, 800);
+
+      const url = await uploadToCloudinary(compressed, "cinematch-avatars", 400);
       if (url) {
-        setAvatarFile(null); // 清除文件，使用 Cloudinary URL
+        setAvatarFile(null);
         setFormData((prev) => ({ ...prev, avatar_url: url }));
       } else {
         setAvatarError(t("profile", "avatarUploadFailed"));
-        setAvatarPreview(""); // 清除预览
+        setAvatarPreview("");
       }
     } catch {
       setAvatarError(t("profile", "avatarUploadError"));
-      setAvatarPreview(""); // 清除预览
+      setAvatarPreview("");
     } finally {
       setAvatarUploading(false);
     }
@@ -406,7 +467,7 @@ export default function ProfilePage() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/*"
                   onChange={handleAvatarChange}
                   className="hidden"
                 />

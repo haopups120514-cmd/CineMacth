@@ -583,8 +583,15 @@ export function formatRelativeTime(dateStr: string): string {
 
 /**
  * 上传图片到 Cloudinary 并自动压缩
+ * @param file 文件
+ * @param folder 存储文件夹 (默认 cinematch-portfolios)
+ * @param maxWidth 最大宽度 (默认 1200)
  */
-export async function uploadToCloudinary(file: File): Promise<string | null> {
+export async function uploadToCloudinary(
+  file: File,
+  folder = "cinematch-portfolios",
+  maxWidth = 1200
+): Promise<string | null> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -596,7 +603,7 @@ export async function uploadToCloudinary(file: File): Promise<string | null> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
-  formData.append("folder", "cinematch-portfolios");
+  formData.append("folder", folder);
 
   try {
     const res = await fetch(
@@ -605,7 +612,8 @@ export async function uploadToCloudinary(file: File): Promise<string | null> {
     );
 
     if (!res.ok) {
-      console.error("Cloudinary 上传失败:", res.statusText);
+      const errorText = await res.text();
+      console.error("Cloudinary 上传失败:", res.status, errorText);
       return null;
     }
 
@@ -613,7 +621,7 @@ export async function uploadToCloudinary(file: File): Promise<string | null> {
     // 返回自动压缩 + 质量优化的 URL
     const optimizedUrl = data.secure_url.replace(
       "/upload/",
-      "/upload/q_auto,f_auto,w_1200/"
+      `/upload/q_auto,f_auto,w_${maxWidth}/`
     );
     return optimizedUrl;
   } catch (err) {
@@ -792,7 +800,23 @@ export async function fetchAllRecruitments(): Promise<(DbRecruitment & { poster?
 // ==================== 招聘申请 ====================
 
 /**
- * 申请招聘
+ * 发送通知邮件（异步，不阻塞主流程）
+ */
+async function sendNotification(type: string, data: Record<string, string>) {
+  try {
+    await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, data }),
+    });
+  } catch {
+    // 邮件发送失败不影响主流程
+    console.warn("通知邮件发送失败，不影响申请");
+  }
+}
+
+/**
+ * 申请招聘（含邮件通知）
  */
 export async function applyToRecruitment(
   recruitmentId: string,
@@ -813,6 +837,41 @@ export async function applyToRecruitment(
     console.error("申请招聘失败:", error);
     return null;
   }
+
+  // 异步发送邮件通知（不阻塞返回）
+  (async () => {
+    try {
+      // 获取招聘信息
+      const { data: recruitment } = await supabase
+        .from("recruitments")
+        .select("*")
+        .eq("id", recruitmentId)
+        .single();
+
+      if (!recruitment) return;
+
+      // 获取发布者和申请者资料
+      const [posterResult, applicantResult] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", recruitment.user_id).single(),
+        supabase.from("profiles").select("*").eq("id", applicantId).single(),
+      ]);
+
+      const poster = posterResult.data;
+      const applicant = applicantResult.data;
+
+      if (poster?.email) {
+        sendNotification("recruitment_application", {
+          posterEmail: poster.email,
+          posterName: getDisplayName(poster),
+          applicantName: applicant ? getDisplayName(applicant) : "Someone",
+          recruitmentTitle: recruitment.title,
+          applicationMessage: message,
+        });
+      }
+    } catch {
+      // 忽略通知错误
+    }
+  })();
 
   return data;
 }
