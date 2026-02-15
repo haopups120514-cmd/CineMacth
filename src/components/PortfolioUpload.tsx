@@ -18,6 +18,7 @@ import {
   createPortfolioItem,
   deletePortfolioItem,
   uploadToCloudinary,
+  compressImageFile,
   extractYouTubeId,
   getYouTubeThumbnail,
   type DbPortfolio,
@@ -60,17 +61,16 @@ export default function PortfolioUpload({
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
+    const isImage = file.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp|gif)$/i.test(file.name);
+    if (!isImage) {
       setError("只支持图片文件，视频请使用 YouTube 链接");
       return;
     }
 
     setSelectedFile(file);
     setError("");
-
-    const reader = new FileReader();
-    reader.onloadend = () => setFilePreview(reader.result as string);
-    reader.readAsDataURL(file);
+    // 用 createObjectURL 替代 FileReader（更快，移动端兼容性更好）
+    setFilePreview(URL.createObjectURL(file));
   };
 
   const handleUpload = async () => {
@@ -102,7 +102,11 @@ export default function PortfolioUpload({
           return;
         }
 
-        const cloudinaryUrl = await uploadToCloudinary(selectedFile);
+        // 先压缩再上传（解决手机端大图上传超时）
+        const compressed = await compressImageFile(selectedFile, 1200);
+        console.log(`作品集压缩: ${(selectedFile.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB`);
+
+        const cloudinaryUrl = await uploadToCloudinary(compressed, "cinematch-portfolios", 1200);
         if (!cloudinaryUrl) {
           setError("图片上传失败，请检查 Cloudinary 配置或重试");
           setUploading(false);

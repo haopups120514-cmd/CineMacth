@@ -605,9 +605,13 @@ export async function uploadToCloudinary(
   formData.append("upload_preset", uploadPreset);
   formData.append("folder", folder);
 
+  // 判断用 image/upload 还是 auto/upload（HEIC 等格式需要 auto）
+  const isStandardImage = /^image\/(jpeg|png|webp|gif|svg)/.test(file.type);
+  const endpoint = isStandardImage ? "image" : "auto";
+
   try {
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/${endpoint}/upload`,
       { method: "POST", body: formData }
     );
 
@@ -628,6 +632,84 @@ export async function uploadToCloudinary(
     console.error("Cloudinary 上传异常:", err);
     return null;
   }
+}
+
+/**
+ * 客户端图片压缩（共享工具函数）
+ * 多策略兜底，兼容移动端大图 + HEIC
+ */
+export async function compressImageFile(file: File, maxSize = 800): Promise<File> {
+  // 如果已经很小就不压缩
+  if (file.size < 300 * 1024) return file;
+
+  const drawAndExport = (
+    source: HTMLImageElement | ImageBitmap,
+    naturalW: number,
+    naturalH: number
+  ): Promise<File> => {
+    return new Promise((resolve) => {
+      let w = naturalW;
+      let h = naturalH;
+      if (w > h) {
+        if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
+      } else {
+        if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+
+      ctx.drawImage(source, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => {
+          if (blob && blob.size > 0) {
+            resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+          } else {
+            resolve(file);
+          }
+        },
+        "image/jpeg",
+        0.85
+      );
+    });
+  };
+
+  // 策略 1: createImageBitmap
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file);
+      const result = await drawAndExport(bitmap, bitmap.width, bitmap.height);
+      bitmap.close();
+      return result;
+    } catch (e) {
+      console.warn("createImageBitmap 失败，降级:", e);
+    }
+  }
+
+  // 策略 2: Image + objectURL
+  try {
+    const result = await new Promise<File>((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = async () => {
+        URL.revokeObjectURL(url);
+        try {
+          resolve(await drawAndExport(img, img.naturalWidth, img.naturalHeight));
+        } catch (e2) { reject(e2); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+      img.src = url;
+    });
+    return result;
+  } catch (e) {
+    console.warn("Image 压缩失败，返回原文件:", e);
+  }
+
+  // 策略 3: 原文件直接交给 Cloudinary
+  return file;
 }
 
 // ==================== YouTube 工具 ====================

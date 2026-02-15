@@ -10,7 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import PageBackground from "@/components/PageBackground";
 import PortfolioUpload from "@/components/PortfolioUpload";
 import { supabase } from "@/lib/supabase";
-import { fetchUserPortfolios, uploadToCloudinary, type DbPortfolio } from "@/lib/database";
+import { fetchUserPortfolios, uploadToCloudinary, compressImageFile, type DbPortfolio } from "@/lib/database";
 import {
   generateRandomUsername,
   isValidUsername,
@@ -163,91 +163,6 @@ export default function ProfilePage() {
   };
 
   const MAX_AVATAR_SIZE = 20 * 1024 * 1024; // 20MB（压缩前原图限制）
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic", "image/heif"];
-
-  /**
-   * 客户端图片压缩 — 多策略兜底，兼容移动端大图
-   * 策略 1: createImageBitmap (内存占用最低，iOS 15+ 支持)
-   * 策略 2: Image + Canvas 降级
-   * 策略 3: 全部失败则直接返回原文件，让 Cloudinary 服务端处理
-   */
-  const compressImage = async (file: File, maxSize = 400): Promise<File> => {
-    // 如果已经很小就不压缩
-    if (file.size < 300 * 1024) return file;
-
-    // 画布绘制 + 导出
-    const drawAndExport = (
-      source: HTMLImageElement | ImageBitmap,
-      naturalW: number,
-      naturalH: number
-    ): Promise<File> => {
-      return new Promise((resolve) => {
-        let w = naturalW;
-        let h = naturalH;
-        if (w > h) {
-          if (w > maxSize) { h = Math.round((h * maxSize) / w); w = maxSize; }
-        } else {
-          if (h > maxSize) { w = Math.round((w * maxSize) / h); h = maxSize; }
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) { resolve(file); return; }
-
-        ctx.drawImage(source, 0, 0, w, h);
-        canvas.toBlob(
-          (blob) => {
-            if (blob && blob.size > 0) {
-              resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
-            } else {
-              resolve(file);
-            }
-          },
-          "image/jpeg",
-          0.85
-        );
-      });
-    };
-
-    // ----- 策略 1: createImageBitmap（内存效率最高）-----
-    if (typeof createImageBitmap === "function") {
-      try {
-        const bitmap = await createImageBitmap(file);
-        const result = await drawAndExport(bitmap, bitmap.width, bitmap.height);
-        bitmap.close();
-        return result;
-      } catch (e) {
-        console.warn("createImageBitmap 压缩失败，降级到 Image:", e);
-      }
-    }
-
-    // ----- 策略 2: Image + objectURL -----
-    try {
-      const result = await new Promise<File>((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = async () => {
-          URL.revokeObjectURL(url);
-          try {
-            const r = await drawAndExport(img, img.naturalWidth, img.naturalHeight);
-            resolve(r);
-          } catch (e2) {
-            reject(e2);
-          }
-        };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
-        img.src = url;
-      });
-      return result;
-    } catch (e) {
-      console.warn("Image 压缩也失败，返回原文件:", e);
-    }
-
-    // ----- 策略 3: 直接返回原文件（Cloudinary 服务端 resize）-----
-    return file;
-  };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -268,14 +183,13 @@ export default function ProfilePage() {
       return;
     }
 
-    // 立即显示预览（使用 createObjectURL 比 FileReader 快）
+    // 立即显示预览
     setAvatarPreview(URL.createObjectURL(file));
 
     // 压缩 + 上传
     setAvatarUploading(true);
     try {
-      // 客户端压缩到 400px（头像不需要太大），转 JPEG
-      const compressed = await compressImage(file, 400);
+      const compressed = await compressImageFile(file, 400);
       console.log(`头像压缩: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB`);
 
       const url = await uploadToCloudinary(compressed, "cinematch-avatars", 400);
