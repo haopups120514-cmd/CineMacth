@@ -592,13 +592,8 @@ export async function uploadToCloudinary(
   folder = "cinematch-portfolios",
   maxWidth = 1200
 ): Promise<string | null> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || !uploadPreset) {
-    console.error("Cloudinary 配置缺失，请设置环境变量");
-    return null;
-  }
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "diuvh9tjx";
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default";
 
   const formData = new FormData();
   formData.append("file", file);

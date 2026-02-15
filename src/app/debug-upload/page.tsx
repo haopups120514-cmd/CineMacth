@@ -104,8 +104,8 @@ export default function DebugUploadPage() {
     }
 
     // 4. Cloudinary 直传测试（不压缩）
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "diuvh9tjx";
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default";
     addLog(`☁️ Cloudinary: name=${cloudName || "缺失"}, preset=${uploadPreset || "缺失"}`);
 
     if (cloudName && uploadPreset) {
