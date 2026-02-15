@@ -14,22 +14,31 @@ export default function PrivacyPage() {
       title: "隐私政策",
       subtitle: "我们如何保护您的数据",
       back: "返回首页",
+      date: "制定日: 2026年2月15日",
       sections: [
         {
-          heading: "1. 收集的信息",
-          body: "本服务（CineMatch）在用户注册时收集电子邮箱、昵称及头像等信息。",
+          heading: "1. 基本方针",
+          body: "CineMatch（以下简称「本服务」）重视个人信息保护，遵守日本《个人信息保护法》。",
         },
         {
-          heading: "2. 使用目的",
-          body: "收集的信息仅用于以下目的：\n・服务的提供（登录、匹配功能）\n・用户间的沟通（聊天）\n・来自运营方的重要通知",
+          heading: "2. 收集的信息",
+          body: "用户信息: 通过Google登录等方式提供的电子邮箱、姓名、头像。\n\n设备信息: 为改善服务而记录的访问日志（IP地址、浏览器类型）。",
         },
         {
-          heading: "3. 向第三方提供",
-          body: "除法律规定的情况外，未经用户同意不会向第三方提供个人信息。",
+          heading: "3. 数据使用目的",
+          body: "・用户身份验证（认证）\n・防止和应对非法使用\n・服务的维护与改善",
         },
         {
-          heading: "4. 数据管理",
-          body: "我们尽力确保安全，但请理解本服务为个人开发的测试版。",
+          heading: "4. 外部服务的使用",
+          body: "本服务使用以下第三方服务进行数据存储和认证：\n\n・Supabase: 数据库及认证基础设施\n・Vercel: 托管服务器\n\n这些服务均根据各自的隐私政策进行严格管理。",
+        },
+        {
+          heading: "5. 关于Cookie",
+          body: "本服务使用Cookie来维持登录状态。您可以在浏览器设置中禁用Cookie，但部分功能可能无法使用。",
+        },
+        {
+          heading: "6. 联系方式",
+          body: "如有隐私相关问题，请通过运营者的X（原Twitter）私信联系。",
         },
       ],
     },
@@ -37,22 +46,31 @@ export default function PrivacyPage() {
       title: "Privacy Policy",
       subtitle: "How we protect your data",
       back: "Back to Home",
+      date: "Established: February 15, 2026",
       sections: [
         {
-          heading: "1. Information We Collect",
-          body: "CineMatch collects your email address, nickname, and profile image during registration.",
+          heading: "1. Basic Policy",
+          body: 'CineMatch (hereinafter referred to as "this service") values the protection of personal information and complies with Japan\'s Act on the Protection of Personal Information.',
         },
         {
-          heading: "2. Purpose of Use",
-          body: "Collected information is used solely for:\n・Providing services (login, matching)\n・User communication (chat)\n・Important announcements from the team",
+          heading: "2. Information We Collect",
+          body: "User Information: Email address, name, and profile image provided through Google login, etc.\n\nDevice Information: Access logs (IP address, browser type) collected for service improvement.",
         },
         {
-          heading: "3. Disclosure to Third Parties",
-          body: "We will not share your personal information with third parties without your consent, except as required by law.",
+          heading: "3. Purpose of Data Use",
+          body: "・User identity verification (authentication)\n・Prevention and response to unauthorized use\n・Service maintenance and improvement",
         },
         {
-          heading: "4. Data Management",
-          body: "We do our best to ensure security, but please understand this is a beta version developed by an individual.",
+          heading: "4. Use of External Services",
+          body: "This service uses the following third-party services for data storage and authentication:\n\n・Supabase: Database and authentication infrastructure\n・Vercel: Hosting server\n\nThese services are strictly managed according to their respective privacy policies.",
+        },
+        {
+          heading: "5. About Cookies",
+          body: "We use cookies to maintain your login status. You can disable cookies in your browser settings, but some features may become unavailable.",
+        },
+        {
+          heading: "6. Contact",
+          body: "For privacy-related inquiries, please contact the operator via X (formerly Twitter) DM.",
         },
       ],
     },
@@ -60,22 +78,31 @@ export default function PrivacyPage() {
       title: "プライバシーポリシー",
       subtitle: "お客様のデータの保護について",
       back: "ホームに戻る",
+      date: "制定日: 2026年2月15日",
       sections: [
         {
-          heading: "1. 収集する情報",
-          body: "本サービス（CineMatch）は、ユーザー登録時にメールアドレス、ニックネーム、およびプロフィール画像等の情報を収集します。",
+          heading: "1. 基本方針",
+          body: "CineMatch（以下、「当サービス」）は、個人情報の保護を重要視し、日本の個人情報保護法を遵守します。",
         },
         {
-          heading: "2. 利用目的",
-          body: "収集した情報は、以下の目的のみに使用します。\n・サービスの提供（ログイン、マッチング機能）\n・ユーザー間のコミュニケーション（チャット）\n・運営からの重要なお知らせ",
+          heading: "2. 収集する情報",
+          body: "ユーザー情報: Googleログイン等を通じて提供されるメールアドレス、名前、プロフィール画像。\n\n端末情報: サービス改善のためのアクセスログ（IPアドレス、ブラウザの種類）。",
         },
         {
-          heading: "3. 第三者への提供",
-          body: "法令に基づく場合を除き、ユーザーの同意なく個人情報を第三者に提供することはありません。",
+          heading: "3. データの利用目的",
+          body: "・ユーザーの本人確認（認証）のため\n・不正利用の防止および対応のため\n・サービスの維持・改善のため",
         },
         {
-          heading: "4. データの管理",
-          body: "セキュリティには万全を期していますが、個人開発のベータ版であることをご理解ください。",
+          heading: "4. 外部サービスの利用",
+          body: "当サービスは、データの保存および認証機能のために以下の第三者サービスを利用しています。\n\n・Supabase: データベースおよび認証基盤\n・Vercel: ホスティングサーバー\n\nこれらのサービスは、それぞれのプライバシーポリシーに基づいて厳重に管理されています。",
+        },
+        {
+          heading: "5. Cookie（クッキー）について",
+          body: "ログイン状態の保持のためにCookieを使用しています。ブラウザの設定で無効にすることも可能ですが、その場合サービスの一部が利用できなくなります。",
+        },
+        {
+          heading: "6. お問い合わせ",
+          body: "プライバシーに関するお問い合わせは、運営者のX（旧Twitter）DMまでご連絡ください。",
         },
       ],
     },
@@ -128,7 +155,10 @@ export default function PrivacyPage() {
             ))}
           </div>
 
-          <p className="mt-10 text-xs text-neutral-600 text-center">
+          <p className="mt-10 text-xs text-neutral-500 text-center">
+            {c.date}
+          </p>
+          <p className="mt-2 text-xs text-neutral-600 text-center">
             © 2026 CineMatch by Koko. All Rights Reserved.
           </p>
         </motion.div>

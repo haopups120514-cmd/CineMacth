@@ -16,16 +16,20 @@ export default function TermsPage() {
       back: "返回首页",
       sections: [
         {
-          heading: "1. 禁止事项",
-          body: "以下行为被禁止。违反者账户将被即时停用，不另行通知。\n・对他人的诽谤中伤、骚扰行为\n・发布违反公序良俗的内容\n・反复无故取消（放鸽子）",
+          heading: "1. 适用范围",
+          body: "本规约适用于与本服务使用相关的一切关系。",
         },
         {
-          heading: "2. 内容权利",
-          body: "用户上传的图片、视频、文字的著作权全部归投稿者本人所有。\n本服务仅在站内展示及推广目的范围内使用这些内容。",
+          heading: "2. 禁止事项",
+          body: "用户不得进行以下行为：\n\n・违反法律法规或公序良俗的行为\n・宗教劝诱、传销、垃圾信息行为\n・对其他用户的骚扰、诽谤中伤\n・对服务器施加过度负担的行为",
         },
         {
-          heading: "3. 服务变更・停止",
-          body: "本服务由学生个人开发，因此可能未经预告变更或停止功能。",
+          heading: "3. 投稿数据的权利",
+          body: "用户投稿的文章、图片、视频链接等的著作权归该用户所有。但本服务可在运营所需范围内（展示、缩放等）使用。",
+        },
+        {
+          heading: "4. 免责声明",
+          body: "・本服务为学生个人开发的Beta版。\n・对于因意外Bug导致的数据丢失或服务暂停，运营者不承担责任。\n・用户之间的纠纷（金钱、拍摄现场事故等）由当事人自行解决。",
         },
       ],
     },
@@ -35,16 +39,20 @@ export default function TermsPage() {
       back: "Back to Home",
       sections: [
         {
-          heading: "1. Prohibited Actions",
-          body: "The following actions are prohibited. Violators will have their accounts suspended without notice.\n・Slander, defamation, or harassment toward others\n・Posting content that violates public order and morals\n・Repeated no-shows or last-minute cancellations",
+          heading: "1. Scope of Application",
+          body: "These terms apply to all matters related to the use of this service.",
         },
         {
-          heading: "2. Content Rights",
-          body: "Copyright for all images, videos, and text uploaded by users belongs entirely to the original poster.\nThis service may only use such content for display and promotion within the site.",
+          heading: "2. Prohibited Actions",
+          body: "Users must not engage in the following:\n\n・Actions that violate laws or public order and morals\n・Religious solicitation, pyramid schemes, or spam\n・Harassment, slander, or defamation toward other users\n・Actions that place excessive load on servers",
         },
         {
-          heading: "3. Service Changes & Suspension",
-          body: "This service is developed by an individual student and may change or suspend features without prior notice.",
+          heading: "3. Rights to Posted Content",
+          body: "Copyright for text, images, video links, etc. posted by users is retained by the respective user. However, this service may use such content within the scope necessary for site operations (display, resizing, etc.).",
+        },
+        {
+          heading: "4. Disclaimer",
+          body: "・This service is a beta version developed by an individual student.\n・The operator cannot be held responsible for data loss due to unexpected bugs or temporary service suspension.\n・Disputes between users (financial, on-set accidents, etc.) shall be resolved between the parties involved.",
         },
       ],
     },
@@ -54,16 +62,20 @@ export default function TermsPage() {
       back: "ホームに戻る",
       sections: [
         {
-          heading: "1. 禁止事項",
-          body: "以下の行為を禁止します。違反した場合、予告なくアカウントを停止します。\n・他者への誹謗中傷、ハラスメント行為\n・公序良俗に反するコンテンツの投稿\n・無断キャンセル（ドタキャン）の繰り返し",
+          heading: "1. 適用範囲",
+          body: "本規約は、当サービスの利用に関する一切の関係に適用されます。",
         },
         {
-          heading: "2. コンテンツの権利",
-          body: "ユーザーが投稿した画像・動画・テキストの著作権は、すべて投稿者本人に帰属します。\n本サービスは、サイト内での表示・プロモーションの目的範囲内でのみこれを使用できるものとします。",
+          heading: "2. 禁止事項",
+          body: "ユーザーは、以下の行為を行ってはなりません。\n\n・法令または公序良俗に反する行為\n・宗教勧誘、マルチ商法、スパム行為\n・他のユーザーへの嫌がらせ、誹謗中傷\n・サーバーに過度の負担をかける行為",
         },
         {
-          heading: "3. サービスの変更・停止",
-          body: "本サービスは学生による個人開発のため、予告なく機能を変更・停止する場合があります。",
+          heading: "3. 投稿データの権利",
+          body: "ユーザーが投稿した文章、画像、動画リンク等の著作権は、当該ユーザーに留保されます。ただし、当サービスはこれをサイト運営に必要な範囲（表示、リサイズ等）で利用できるものとします。",
+        },
+        {
+          heading: "4. 免責事項",
+          body: "・当サービスは学生による個人開発のベータ版です。\n・予期せぬバグによるデータ消失や、サービスの一時停止について、運営者は責任を負いかねます。\n・ユーザー間のトラブル（金銭、撮影現場での事故等）は、当事者同士で解決するものとします。",
         },
       ],
     },
