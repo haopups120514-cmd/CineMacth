@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Smile, ImageIcon } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -20,13 +21,7 @@ interface MessagePanelProps {
   recipientRole: string;
 }
 
-// 快捷回复模板
-const quickMessages = [
-  "你好！我正在筹备一个短片项目，想邀请你加入 🎬",
-  "Hi！看了你的作品集很喜欢，方便聊聊合作吗？",
-  "你好，我们有个周末拍摄计划，感兴趣吗？",
-  "想了解一下你的档期和合作方式～",
-];
+
 
 export default function MessagePanel({
   isOpen,
@@ -35,6 +30,15 @@ export default function MessagePanel({
   recipientAvatar,
   recipientRole,
 }: MessagePanelProps) {
+  const { t } = useLanguage();
+
+  const quickMessages = [
+    t("messagePanel", "quick1"),
+    t("messagePanel", "quick2"),
+    t("messagePanel", "quick3"),
+    t("messagePanel", "quick4"),
+  ];
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [showQuickReplies, setShowQuickReplies] = useState(true);
@@ -82,10 +86,10 @@ export default function MessagePanel({
 
     setTimeout(() => {
       const replies = [
-        `谢谢你的邀请！可以先聊聊项目的具体情况吗？`,
-        `听起来很有趣！我最近刚好有空，可以详聊。`,
-        `你好！麻烦发一下项目的详细信息，我看看时间。`,
-        `太好了！我一直想参与这类项目，什么时候方便见面聊？`,
+        t("mockMessagePanel", "reply1"),
+        t("mockMessagePanel", "reply2"),
+        t("mockMessagePanel", "reply3"),
+        t("mockMessagePanel", "reply4"),
       ];
       const reply: Message = {
         id: `msg-${Date.now() + 1}`,
@@ -141,7 +145,7 @@ export default function MessagePanel({
               </div>
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-emerald-400">在线</span>
+                <span className="text-xs text-emerald-400">{t("common", "online")}</span>
               </div>
               <button
                 onClick={onClose}
@@ -170,11 +174,11 @@ export default function MessagePanel({
                     {recipientName}
                   </p>
                   <p className="mt-1 text-xs text-neutral-500">
-                    {recipientRole} · 通常在 5 分钟内回复
+                    {recipientRole}{t("mockMessagePanel", "replyTime")}
                   </p>
                   <div className="mt-4 mx-auto max-w-[280px] rounded-xl bg-white/5 border border-white/10 p-3">
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      👋 向 {recipientName} 发送第一条消息，开始你们的合作之旅！
+                      {t("messagePanel", "emptyChat").replace("{name}", recipientName)}
                     </p>
                   </div>
                 </motion.div>
@@ -211,9 +215,9 @@ export default function MessagePanel({
                       </span>
                       {msg.sender === "me" && msg.status && (
                         <span className="text-[10px] text-[#050505]/50">
-                          {msg.status === "sent" && "✓"}
+                          {msg.status === "sent" && t("messagePanel", "sent")}
                           {msg.status === "delivered" && "✓✓"}
-                          {msg.status === "read" && "✓✓ 已读"}
+                          {msg.status === "read" && t("messagePanel", "read")}
                         </span>
                       )}
                     </div>
@@ -233,7 +237,7 @@ export default function MessagePanel({
                   exit={{ opacity: 0, y: 10 }}
                   className="border-t border-white/5 px-5 py-3"
                 >
-                  <p className="text-xs text-neutral-500 mb-2">快捷消息</p>
+                  <p className="text-xs text-neutral-500 mb-2">{t("messagePanel", "quickMessages")}</p>
                   <div className="space-y-2">
                     {quickMessages.map((msg) => (
                       <button
@@ -265,7 +269,7 @@ export default function MessagePanel({
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={`给 ${recipientName} 发消息...`}
+                    placeholder={t("messagePanel", "inputPlaceholder").replace("{name}", recipientName)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50 transition-colors"
                   />
                 </div>

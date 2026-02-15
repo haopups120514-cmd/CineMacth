@@ -6,11 +6,13 @@ import { motion } from "framer-motion";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getEmailError } from "@/lib/auth-validation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Step = "email" | "otp";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -30,7 +32,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({ email });
 
     if (error) {
-      setError("发送验证码失败，请稍后重试");
+      setError(t("login", "sendFailed"));
     } else {
       setStep("otp");
     }
@@ -39,7 +41,7 @@ export default function LoginPage() {
 
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
-      setError("请输入 6 位验证码");
+      setError(t("login", "otpInvalid"));
       return;
     }
 
@@ -53,7 +55,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError("验证码错误或已过期");
+      setError(t("login", "otpWrong"));
     } else {
       router.push("/");
     }
@@ -65,7 +67,7 @@ export default function LoginPage() {
     setError(null);
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
-      setError("重新发送失败，请稍后重试");
+      setError(t("login", "resendFailed"));
     } else {
       setError(null);
     }
@@ -92,9 +94,9 @@ export default function LoginPage() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#5CC8D6]/10">
                 <Mail className="h-7 w-7 text-[#5CC8D6]" />
               </div>
-              <h1 className="text-2xl font-bold text-white">学生邮箱登录</h1>
+              <h1 className="text-2xl font-bold text-white">{t("login", "title")}</h1>
               <p className="mt-2 text-sm text-neutral-400">
-                请使用大学邮箱地址（如 .ac.jp、.edu）
+                {t("login", "subtitle")}
               </p>
             </div>
 
@@ -123,7 +125,7 @@ export default function LoginPage() {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                "发送验证码"
+                t("login", "sendCode")
               )}
             </button>
           </div>
@@ -134,9 +136,9 @@ export default function LoginPage() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#5CC8D6]/10">
                 <ShieldCheck className="h-7 w-7 text-[#5CC8D6]" />
               </div>
-              <h1 className="text-2xl font-bold text-white">输入验证码</h1>
+              <h1 className="text-2xl font-bold text-white">{t("login", "enterCode")}</h1>
               <p className="mt-2 text-sm text-neutral-400">
-                验证码已发送到{" "}
+                {t("login", "codeSentTo")}
                 <span className="text-[#5CC8D6]">{email}</span>
               </p>
             </div>
@@ -168,7 +170,7 @@ export default function LoginPage() {
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                "验证登录"
+                t("login", "verify")
               )}
             </button>
 
@@ -182,14 +184,14 @@ export default function LoginPage() {
                 className="flex items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
               >
                 <ArrowLeft className="h-4 w-4" />
-                返回
+                {t("common", "back")}
               </button>
               <button
                 onClick={handleResendOTP}
                 disabled={loading}
                 className="text-neutral-400 hover:text-[#5CC8D6] transition-colors cursor-pointer disabled:opacity-50"
               >
-                重新发送
+                {t("login", "resend")}
               </button>
             </div>
           </div>

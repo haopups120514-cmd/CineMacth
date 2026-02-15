@@ -25,6 +25,7 @@ import {
   type DbProfile,
 } from "@/lib/database";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { CompensationType } from "@/types";
 
 const compensationOptions: (CompensationType | "全部")[] = [
@@ -37,6 +38,14 @@ const compensationOptions: (CompensationType | "全部")[] = [
 
 export default function ProjectsPage() {
   const { user, session } = useContext(AuthContext);
+  const { t } = useLanguage();
+  const compLabel: Record<string, string> = {
+    "全部": t("projects", "all"),
+    "有薪": t("home", "compPaid"),
+    "包食宿": t("home", "compAccom"),
+    "互免": t("home", "compExchange"),
+    "可谈": t("home", "compNegotiable"),
+  };
   const [selectedComp, setSelectedComp] = useState<
     CompensationType | "全部"
   >("全部");
@@ -88,7 +97,7 @@ export default function ProjectsPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-4xl font-extrabold text-white md:text-5xl"
         >
-          通告板
+          {t("projects", "title")}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -96,7 +105,7 @@ export default function ProjectsPage() {
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className="mt-3 text-lg text-neutral-400"
         >
-          寻找你的下一个项目
+          {t("projects", "subtitle")}
         </motion.p>
 
         {/* 筛选 */}
@@ -116,7 +125,7 @@ export default function ProjectsPage() {
                   : "border-white/15 bg-white/5 text-neutral-400 hover:border-white/25 hover:text-neutral-300"
               }`}
             >
-              {opt}
+              {compLabel[opt] || opt}
             </button>
           ))}
         </motion.div>
@@ -130,26 +139,26 @@ export default function ProjectsPage() {
         >
           <div className="flex items-center gap-3 mb-4">
             <Briefcase className="h-5 w-5 text-[#5CC8D6]" />
-            <h2 className="text-xl font-bold text-white">招聘信息</h2>
+            <h2 className="text-xl font-bold text-white">{t("projects", "recruitmentSection")}</h2>
             <span className="text-sm text-neutral-500">
-              {loadingRecruitments ? "..." : `${filteredRecruitments.length} 条`}
+              {loadingRecruitments ? "..." : `${filteredRecruitments.length}${t("projects", "count")}`}
             </span>
           </div>
 
           {loadingRecruitments ? (
             <div className="text-center py-8">
               <div className="inline-block h-6 w-6 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-              <p className="mt-2 text-neutral-500 text-sm">加载中...</p>
+              <p className="mt-2 text-neutral-500 text-sm">{t("common", "loading")}</p>
             </div>
           ) : filteredRecruitments.length === 0 ? (
             <div className="text-center py-10 rounded-xl border border-dashed border-white/10">
               <Briefcase className="mx-auto h-8 w-8 text-neutral-600" />
-              <p className="mt-2 text-neutral-500 text-sm">暂无招聘信息</p>
+              <p className="mt-2 text-neutral-500 text-sm">{t("projects", "noRecruitments")}</p>
               <Link
                 href="/"
                 className="mt-3 inline-block text-sm text-[#5CC8D6] hover:text-[#7AD4DF]"
               >
-                去首页发布招聘 →
+                {t("projects", "goPostRecruitment")}
               </Link>
             </div>
           ) : (
@@ -211,7 +220,7 @@ export default function ProjectsPage() {
                           className="h-5 w-5 rounded-full bg-neutral-800"
                         />
                         <span className="text-xs text-neutral-500">
-                          {item.poster ? getDisplayName(item.poster) : "未知用户"}
+                          {item.poster ? getDisplayName(item.poster) : t("common", "unknownUser")}
                         </span>
                         <span className="text-xs text-neutral-600">·</span>
                         <span className="text-xs text-neutral-600">
@@ -228,7 +237,7 @@ export default function ProjectsPage() {
                           className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-neutral-300 hover:bg-white/10 transition-all flex items-center gap-1"
                         >
                           <User className="h-3 w-3" />
-                          联系
+                          {t("common", "contact")}
                         </Link>
                       )}
                       {user?.id === item.user_id && (
@@ -259,9 +268,9 @@ export default function ProjectsPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-12"
         >
-          <h2 className="text-xl font-bold text-white mb-1">示例项目</h2>
+          <h2 className="text-xl font-bold text-white mb-1">{t("projects", "sampleProjects")}</h2>
           <p className="text-sm text-neutral-500 mb-4">
-            {filteredProjects.length} 个项目
+            {filteredProjects.length}{t("projects", "projectCount")}
           </p>
 
           <motion.div
@@ -281,8 +290,8 @@ export default function ProjectsPage() {
 
         {filteredRecruitments.length === 0 && filteredProjects.length === 0 && (
           <div className="mt-16 text-center text-neutral-500">
-            <p className="text-lg">没有找到符合条件的项目</p>
-            <p className="mt-2 text-sm">试试选择其他报酬类型</p>
+            <p className="text-lg">{t("projects", "noProjects")}</p>
+            <p className="mt-2 text-sm">{t("projects", "tryOther")}</p>
           </div>
         )}
       </div>

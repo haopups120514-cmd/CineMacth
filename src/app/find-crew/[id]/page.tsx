@@ -11,6 +11,7 @@ import CreditScoreCard from "@/components/CreditScoreCard";
 import MessagePanel from "@/components/MessagePanel";
 import RealMessagePanel from "@/components/RealMessagePanel";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { mockCrew } from "@/data/mock-crew";
 import {
   fetchProfileById,
@@ -28,6 +29,7 @@ export default function CrewDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const id = params.id as string;
 
   // 检查是否为 mock crew
@@ -68,7 +70,7 @@ export default function CrewDetailPage() {
         <div className="relative z-10 flex min-h-screen items-center justify-center">
           <div className="text-center">
             <div className="inline-block h-8 w-8 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-            <p className="mt-3 text-neutral-400">加载中...</p>
+            <p className="mt-3 text-neutral-400">{t("common", "loading")}</p>
           </div>
         </div>
       </section>
@@ -82,9 +84,9 @@ export default function CrewDetailPage() {
         <PageBackground />
         <div className="relative z-10 flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <p className="text-neutral-400">未找到该创作者</p>
+            <p className="text-neutral-400">{t("crewDetail", "notFound")}</p>
             <Link href="/find-crew" className="mt-4 inline-block text-[#5CC8D6] hover:text-[#7AD4DF]">
-              返回人才库
+              {t("crewDetail", "backToTalent")}
             </Link>
           </div>
         </div>
@@ -98,16 +100,16 @@ export default function CrewDetailPage() {
   // 统一数据
   const displayName = isRealUser ? getDisplayName(realProfile!) : mockCrewMember!.name;
   const avatarUrl = isRealUser ? getAvatarUrl(realProfile!) : mockCrewMember!.avatarUrl;
-  const role = isRealUser ? (realProfile!.role || "创作者") : mockCrewMember!.role;
-  const university = isRealUser ? (realProfile!.university || "未设置") : mockCrewMember!.university;
-  const location = isRealUser ? (realProfile!.location || "未设置") : mockCrewMember!.location;
-  const bio = isRealUser ? (realProfile!.bio || "这个人很懒，什么都没写") : mockCrewMember!.bio;
+  const role = isRealUser ? (realProfile!.role || t("crewDetail", "creator")) : mockCrewMember!.role;
+  const university = isRealUser ? (realProfile!.university || t("common", "notSet")) : mockCrewMember!.university;
+  const location = isRealUser ? (realProfile!.location || t("common", "notSet")) : mockCrewMember!.location;
+  const bio = isRealUser ? (realProfile!.bio || t("common", "lazyBio")) : mockCrewMember!.bio;
   const styles = isRealUser ? (realProfile!.styles || []) : mockCrewMember!.styles;
   const equipment = isRealUser
     ? (realProfile!.equipment ? realProfile!.equipment.split(",").map(s => s.trim()) : [])
     : mockCrewMember!.equipment;
   const tags = isRealUser
-    ? [location !== "未设置" ? `#${location}` : "", university !== "未设置" ? `#${university}` : ""].filter(Boolean)
+    ? [location !== t("common", "notSet") ? `#${location}` : "", university !== t("common", "notSet") ? `#${university}` : ""].filter(Boolean)
     : mockCrewMember!.tags;
   const creditScore: CreditScore = isRealUser
     ? {
@@ -153,7 +155,7 @@ export default function CrewDetailPage() {
             className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            返回人才库
+            {t("crewDetail", "backToTalent")}
           </Link>
         </motion.div>
 
@@ -165,7 +167,7 @@ export default function CrewDetailPage() {
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5"
           >
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-emerald-400">注册用户</span>
+            <span className="text-xs text-emerald-400">{t("common", "registeredUser")}</span>
           </motion.div>
         )}
 
@@ -192,7 +194,7 @@ export default function CrewDetailPage() {
                     <p className="mt-1 text-neutral-400">{role}</p>
                     <div className="mt-2 flex items-center gap-2">
                       <Shield className="h-4 w-4 text-amber-400" />
-                      <span className="text-sm text-amber-400">信用分 {creditScore.overall}</span>
+                      <span className="text-sm text-amber-400">{t("common", "creditScore")} {creditScore.overall}</span>
                     </div>
                   </div>
                 </div>
@@ -220,7 +222,7 @@ export default function CrewDetailPage() {
             {/* 作品集 - 真实用户从 DB 加载 */}
             {isRealUser && portfolios.length > 0 && (
               <div className="mt-8">
-                <h2 className="text-xl font-bold text-white">作品集</h2>
+                <h2 className="text-xl font-bold text-white">{t("crewDetail", "portfolio")}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   {portfolios.map((item) => {
                     const isYouTube = item.media_type === "youtube";
@@ -261,7 +263,7 @@ export default function CrewDetailPage() {
                           )}
                           <div className="absolute top-2 left-2 rounded-md bg-black/60 px-2 py-0.5 text-[10px] text-white/70 flex items-center gap-1">
                             <ExternalLink className="h-2.5 w-2.5" />
-                            {isYouTube ? "YouTube" : "图片"}
+                            {isYouTube ? "YouTube" : t("crewDetail", "image")}
                           </div>
                         </div>
                         <div className="p-3">
@@ -284,7 +286,7 @@ export default function CrewDetailPage() {
             {/* 作品集 - Mock 用户 */}
             {!isRealUser && works.length > 0 && (
               <div className="mt-8">
-                <h2 className="text-xl font-bold text-white">作品集</h2>
+                <h2 className="text-xl font-bold text-white">{t("crewDetail", "portfolio")}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   {works.map((work) => (
                     <div
@@ -351,7 +353,7 @@ export default function CrewDetailPage() {
               {/* 风格 */}
               {styles.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-xs text-neutral-500 mb-2">风格</p>
+                  <p className="text-xs text-neutral-500 mb-2">{t("crewDetail", "stylesLabel")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {styles.map((s) => (
                       <TagBadge key={s} text={s} variant="accent" />
@@ -363,7 +365,7 @@ export default function CrewDetailPage() {
               {/* 设备 */}
               {equipment.length > 0 && (
                 <div className="mt-4">
-                  <p className="text-xs text-neutral-500 mb-2">设备</p>
+                  <p className="text-xs text-neutral-500 mb-2">{t("crewDetail", "equipmentLabel")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {equipment.map((e) => (
                       <span
@@ -395,7 +397,7 @@ export default function CrewDetailPage() {
                   href="/profile"
                   className="mt-6 w-full flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
                 >
-                  编辑个人资料
+                  {t("crewDetail", "editProfile")}
                 </Link>
               ) : (
                 <button
@@ -406,12 +408,12 @@ export default function CrewDetailPage() {
                   {user ? (
                     <>
                       <MessageCircle className="h-4 w-4" />
-                      邀请合作
+                      {t("crewDetail", "inviteColab")}
                     </>
                   ) : (
                     <>
                       <LogIn className="h-4 w-4" />
-                      登录后邀请合作
+                      {t("crewDetail", "loginToInvite")}
                     </>
                   )}
                 </button>

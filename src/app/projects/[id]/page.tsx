@@ -15,11 +15,13 @@ import {
 import PageBackground from "@/components/PageBackground";
 import TagBadge from "@/components/TagBadge";
 import { mockProjects } from "@/data/mock-projects";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const project = mockProjects.find((p) => p.id === id);
+  const { t } = useLanguage();
   const [showToast, setShowToast] = useState(false);
 
   if (!project) {
@@ -27,7 +29,7 @@ export default function ProjectDetailPage() {
       <section className="relative min-h-screen">
         <PageBackground />
         <div className="relative z-10 flex min-h-screen items-center justify-center">
-          <p className="text-neutral-400">未找到该项目</p>
+          <p className="text-neutral-400">{t("projectDetail", "notFound")}</p>
         </div>
       </section>
     );
@@ -57,7 +59,7 @@ export default function ProjectDetailPage() {
             className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            返回通告板
+            {t("projectDetail", "backToBoard")}
           </Link>
         </motion.div>
 
@@ -79,7 +81,7 @@ export default function ProjectDetailPage() {
             </span>
           </div>
           <p className="mt-2 text-sm text-neutral-500">
-            导演：{project.director} · {formatDate(project.createdAt)} 发布
+            {t("projectDetail", "director")}{project.director} · {formatDate(project.createdAt)}{t("projectDetail", "posted")}
           </p>
         </motion.div>
 
@@ -94,7 +96,7 @@ export default function ProjectDetailPage() {
           >
             {/* 项目简介 */}
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <h2 className="text-lg font-bold text-white">项目简介</h2>
+              <h2 className="text-lg font-bold text-white">{t("projectDetail", "synopsis")}</h2>
               <p className="mt-3 text-sm leading-relaxed text-neutral-300">
                 {project.description}
               </p>
@@ -105,7 +107,7 @@ export default function ProjectDetailPage() {
               <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-[#5CC8D6]" />
-                  <h2 className="text-lg font-bold text-white">剧本大纲</h2>
+                  <h2 className="text-lg font-bold text-white">{t("projectDetail", "script")}</h2>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed text-neutral-300">
                   {project.synopsis}
@@ -118,7 +120,7 @@ export default function ProjectDetailPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-neutral-500">
                   <Calendar className="h-4 w-4" />
-                  <span className="text-xs">拍摄日期</span>
+                  <span className="text-xs">{t("projectDetail", "shootDate")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
                   {formatDate(project.shootingDateStart)} -{" "}
@@ -128,7 +130,7 @@ export default function ProjectDetailPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-neutral-500">
                   <MapPin className="h-4 w-4" />
-                  <span className="text-xs">拍摄地点</span>
+                  <span className="text-xs">{t("projectDetail", "shootLocation")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
                   {project.location}
@@ -137,7 +139,7 @@ export default function ProjectDetailPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-neutral-500">
                   <Banknote className="h-4 w-4" />
-                  <span className="text-xs">报酬方式</span>
+                  <span className="text-xs">{t("projectDetail", "compensation")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
                   {project.compensation}
@@ -146,7 +148,7 @@ export default function ProjectDetailPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                 <div className="flex items-center gap-2 text-neutral-500">
                   <Users className="h-4 w-4" />
-                  <span className="text-xs">项目类型</span>
+                  <span className="text-xs">{t("projectDetail", "projectType")}</span>
                 </div>
                 <p className="mt-2 text-sm font-medium text-white">
                   {project.type}
@@ -163,7 +165,7 @@ export default function ProjectDetailPage() {
             className="w-full lg:w-72 shrink-0"
           >
             <div className="sticky top-24 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-              <h2 className="text-lg font-bold text-white">招募职位</h2>
+              <h2 className="text-lg font-bold text-white">{t("projectDetail", "recruitRoles")}</h2>
 
               <div className="mt-4 flex flex-col gap-3">
                 {project.positions.map((pos) => {
@@ -196,7 +198,7 @@ export default function ProjectDetailPage() {
 
               {openPositions.length > 0 && (
                 <p className="mt-3 text-xs text-neutral-500">
-                  还需 {openPositions.reduce((sum, p) => sum + (p.count - p.filled), 0)} 人
+                  {t("projectDetail", "remaining").replace("{n}", String(openPositions.reduce((sum, p) => sum + (p.count - p.filled), 0)))}
                 </p>
               )}
 
@@ -212,7 +214,7 @@ export default function ProjectDetailPage() {
                 onClick={handleApply}
                 className="mt-6 w-full rounded-xl bg-[#5CC8D6] py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] cursor-pointer"
               >
-                申请加入
+                {t("projectDetail", "applyJoin")}
               </button>
             </div>
           </motion.div>
@@ -228,7 +230,7 @@ export default function ProjectDetailPage() {
             exit={{ opacity: 0, y: 20 }}
             className="fixed bottom-8 right-8 z-50 rounded-xl border border-white/15 bg-white/10 px-6 py-3 text-sm text-white backdrop-blur-md"
           >
-            功能开发中，敬请期待
+            {t("projectDetail", "comingSoon")}
           </motion.div>
         )}
       </AnimatePresence>

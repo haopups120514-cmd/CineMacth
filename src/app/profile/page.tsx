@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronLeft, Save, AlertCircle, Upload, Edit2 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PageBackground from "@/components/PageBackground";
 import PortfolioUpload from "@/components/PortfolioUpload";
 import { supabase } from "@/lib/supabase";
@@ -44,6 +45,7 @@ const AVAILABLE_STYLES = [
 
 export default function ProfilePage() {
   const { user, session, loading, userProfile } = useContext(AuthContext);
+  const { t } = useLanguage();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,7 +173,7 @@ export default function ProfilePage() {
 
     // 文件类型检查
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setAvatarError("仅支持 JPG、PNG、WebP、GIF 格式");
+      setAvatarError(t("profile", "avatarFormatError"));
       return;
     }
 
@@ -196,11 +198,11 @@ export default function ProfilePage() {
         setAvatarFile(null); // 清除文件，使用 Cloudinary URL
         setFormData((prev) => ({ ...prev, avatar_url: url }));
       } else {
-        setAvatarError("头像上传失败，请检查网络后重试");
+        setAvatarError(t("profile", "avatarUploadFailed"));
         setAvatarPreview(""); // 清除预览
       }
     } catch {
-      setAvatarError("头像上传失败，请稍后重试");
+      setAvatarError(t("profile", "avatarUploadError"));
       setAvatarPreview(""); // 清除预览
     } finally {
       setAvatarUploading(false);
@@ -231,7 +233,7 @@ export default function ProfilePage() {
       }
       if (!canChangeUsernameFlag) {
         setSaveStatus("error");
-        setErrorMessage("用户名修改已达上限，请在30天后重试");
+        setErrorMessage(t("profile", "usernameLimit"));
         return;
       }
     }
@@ -276,7 +278,7 @@ export default function ProfilePage() {
     } catch (error: any) {
       setSaveStatus("error");
       // 获取更详细的错误信息
-      const errorMsg = error?.message || error?.hint || error?.details || "保存失败，请重试";
+      const errorMsg = error?.message || error?.hint || error?.details || t("profile", "saveFailed");
       setErrorMessage(errorMsg);
       console.error("完整错误信息:", {
         message: error?.message,
@@ -293,7 +295,7 @@ export default function ProfilePage() {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
         <PageBackground />
-        <div className="relative z-10 text-white">Loading...</div>
+        <div className="relative z-10 text-white">{t("common", "loadingAlt")}</div>
       </div>
     );
   }
@@ -315,7 +317,7 @@ export default function ProfilePage() {
             className="inline-flex items-center gap-2 text-[#5CC8D6] hover:text-[#7AD4DF] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            返回 Dashboard
+            {t("profile", "backToDashboard")}
           </Link>
         </motion.div>
 
@@ -327,10 +329,10 @@ export default function ProfilePage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-extrabold text-white md:text-4xl">
-            编辑个人资料
+            {t("profile", "title")}
           </h1>
           <p className="mt-2 text-neutral-400">
-            让其他创作者更好地了解你
+            {t("profile", "subtitle")}
           </p>
         </motion.div>
 
@@ -353,14 +355,14 @@ export default function ProfilePage() {
           {saveStatus === "success" && (
             <div className="flex items-center gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-green-400">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />
-              <p>资料保存成功！</p>
+              <p>{t("profile", "saveSuccess")}</p>
             </div>
           )}
 
           {/* 头像上传 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-3">
-              个人头像
+              {t("profile", "avatar")}
             </label>
             <div className="flex gap-4 items-start">
               {/* 头像预览 */}
@@ -374,7 +376,7 @@ export default function ProfilePage() {
                   {avatarPreview ? (
                     <img
                       src={avatarPreview}
-                      alt="头像预览"
+                      alt={t("profile", "avatarPreview")}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`;
@@ -383,7 +385,7 @@ export default function ProfilePage() {
                   ) : formData.avatar_url ? (
                     <img
                       src={formData.avatar_url}
-                      alt="当前头像"
+                      alt={t("profile", "currentAvatar")}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`;
@@ -392,7 +394,7 @@ export default function ProfilePage() {
                   ) : (
                     <img
                       src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
-                      alt="默认头像"
+                      alt={t("profile", "defaultAvatar")}
                       className="w-full h-full object-cover"
                     />
                   )}
@@ -416,12 +418,12 @@ export default function ProfilePage() {
                   {avatarUploading ? (
                     <>
                       <div className="h-5 w-5 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-                      上传中...
+                      {t("profile", "uploading")}
                     </>
                   ) : (
                     <>
                       <Upload className="h-5 w-5" />
-                      选择头像
+                      {t("profile", "chooseAvatar")}
                     </>
                   )}
                 </button>
@@ -432,7 +434,7 @@ export default function ProfilePage() {
                   </p>
                 ) : (
                   <p className="mt-2 text-xs text-neutral-500">
-                    支持 JPG、PNG、WebP、GIF，最大 5MB，自动压缩
+                    {t("profile", "avatarHint")}
                   </p>
                 )}
               </div>
@@ -443,7 +445,7 @@ export default function ProfilePage() {
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-semibold text-neutral-300">
-                个人链接
+                {t("profile", "personalLink")}
               </label>
               {!isEditingUsername && (
                 <button
@@ -461,7 +463,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <Edit2 className="h-3 w-3" />
-                  修改
+                  {t("profile", "editLink")}
                 </button>
               )}
             </div>
@@ -481,7 +483,7 @@ export default function ProfilePage() {
                         setFormData((prev) => ({ ...prev, username: val }));
                         setUsernameError("");
                       }}
-                      placeholder="你的个人链接名"
+                      placeholder={t("profile", "linkPlaceholder")}
                       className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder-neutral-600 focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
                     />
                     {usernameError && (
@@ -492,7 +494,7 @@ export default function ProfilePage() {
                     onClick={() => setIsEditingUsername(false)}
                     className="px-3 py-2 text-xs font-semibold text-neutral-400 hover:text-white transition-colors"
                   >
-                    取消
+                    {t("common", "cancel")}
                   </button>
                 </div>
               </div>
@@ -503,7 +505,7 @@ export default function ProfilePage() {
                 </p>
                 {!canChangeUsernameFlag && nextChangeDate && (
                   <p className="mt-2 text-xs text-neutral-500">
-                    下次修改时间：{nextChangeDate.toLocaleDateString("zh-CN")}
+                    {t("profile", "nextEditTime")}{nextChangeDate.toLocaleDateString("zh-CN")}
                   </p>
                 )}
               </div>
@@ -513,23 +515,23 @@ export default function ProfilePage() {
           {/* 当前邮箱 */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              账户邮箱
+              {t("profile", "email")}
             </label>
             <p className="text-base text-white">{user?.email}</p>
-            <p className="mt-1 text-xs text-neutral-500">邮箱无法修改</p>
+            <p className="mt-1 text-xs text-neutral-500">{t("profile", "emailReadonly")}</p>
           </div>
 
           {/* 全名 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              全名
+              {t("profile", "fullName")}
             </label>
             <input
               type="text"
               name="fullName"
               value={formData.fullName}
               onChange={handleInputChange}
-              placeholder="你的全名（例：Hu Haoyu）"
+              placeholder={t("profile", "fullNamePlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             />
           </div>
@@ -537,14 +539,14 @@ export default function ProfilePage() {
           {/* 显示名称 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              显示名称
+              {t("profile", "displayName")}
             </label>
             <input
               type="text"
               name="displayName"
               value={formData.displayName}
               onChange={handleInputChange}
-              placeholder="你希望在平台上显示的名称"
+              placeholder={t("profile", "displayNamePlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             />
           </div>
@@ -552,13 +554,13 @@ export default function ProfilePage() {
           {/* 个人简介 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              个人简介
+              {t("profile", "bio")}
             </label>
             <textarea
               name="bio"
               value={formData.bio}
               onChange={handleInputChange}
-              placeholder="告诉我们关于你自己... (最多 200 字)"
+              placeholder={t("profile", "bioPlaceholder")}
               maxLength={200}
               rows={4}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none resize-none"
@@ -571,7 +573,7 @@ export default function ProfilePage() {
           {/* 主要职色 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-3">
-              主要职色
+              {t("profile", "role")}
             </label>
             <select
               name="role"
@@ -579,7 +581,7 @@ export default function ProfilePage() {
               onChange={handleInputChange}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             >
-              <option value="">选择你的职色...</option>
+              <option value="">{t("profile", "rolePlaceholder")}</option>
               {AVAILABLE_ROLES.map((role) => (
                 <option key={role} value={role}>
                   {role}
@@ -591,14 +593,14 @@ export default function ProfilePage() {
           {/* 所在地区 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              所在地区
+              {t("profile", "location")}
             </label>
             <input
               type="text"
               name="location"
               value={formData.location}
               onChange={handleInputChange}
-              placeholder="例如：东京・新宿"
+              placeholder={t("profile", "locationPlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             />
           </div>
@@ -606,14 +608,14 @@ export default function ProfilePage() {
           {/* 学校 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              学校
+              {t("profile", "school")}
             </label>
             <input
               type="text"
               name="university"
               value={formData.university}
               onChange={handleInputChange}
-              placeholder="例如：日本大学芸術学部"
+              placeholder={t("profile", "schoolPlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             />
           </div>
@@ -621,25 +623,25 @@ export default function ProfilePage() {
           {/* 设备 - 自定义输入 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-2">
-              你拥有的设备
+              {t("profile", "equipment")}
             </label>
             <input
               type="text"
               name="equipment"
               value={formData.equipment}
               onChange={handleInputChange}
-              placeholder="例如：Sony FX3, DJI Pocket 3, 稳定器（用逗号分隔）"
+              placeholder={t("profile", "equipmentPlaceholder")}
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-neutral-600 transition-all focus:border-[#5CC8D6] focus:bg-white/10 focus:outline-none"
             />
             <p className="mt-1 text-xs text-neutral-500">
-              可自由输入，多个设备用逗号分隔
+              {t("profile", "equipmentHint")}
             </p>
           </div>
 
           {/* 风格偏好 */}
           <div>
             <label className="block text-sm font-semibold text-neutral-300 mb-3">
-              创作风格
+              {t("profile", "styles")}
             </label>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {AVAILABLE_STYLES.map((style) => (
@@ -667,13 +669,13 @@ export default function ProfilePage() {
               className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-5 w-5" />
-              {saveStatus === "saving" ? "保存中..." : "保存资料"}
+              {saveStatus === "saving" ? t("profile", "saving") : t("profile", "saveProfile")}
             </button>
             <Link
               href="/dashboard"
               className="flex items-center justify-center rounded-xl border border-white/15 bg-white/5 px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
             >
-              取消
+              {t("common", "cancel")}
             </Link>
           </div>
         </motion.div>
@@ -687,14 +689,14 @@ export default function ProfilePage() {
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-extrabold text-white">我的作品集</h2>
+              <h2 className="text-2xl font-extrabold text-white">{t("profile", "portfolioTitle")}</h2>
               <p className="mt-1 text-sm text-neutral-400">
-                管理你的影视作品，展示在你的个人主页上
+                {t("profile", "portfolioDesc")}
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5">
               <Upload className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs text-emerald-400">{portfolios.length} 部作品</span>
+              <span className="text-xs text-emerald-400">{portfolios.length} {t("profile", "worksCount")}</span>
             </div>
           </div>
 

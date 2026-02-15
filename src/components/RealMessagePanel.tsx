@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Smile, ImageIcon, Plus, Trash2, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   sendMessage,
   fetchConversation,
@@ -27,13 +28,7 @@ interface RealMessagePanelProps {
   recipientRole: string;
 }
 
-// 快捷消息模板
-const quickMessages = [
-  "你好！我正在筹备一个短片项目，想邀请你加入 🎬",
-  "Hi！看了你的作品集很喜欢，方便聊聊合作吗？",
-  "你好，我们有个周末拍摄计划，感兴趣吗？",
-  "想了解一下你的档期和合作方式～",
-];
+
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
@@ -49,6 +44,15 @@ export default function RealMessagePanel({
   recipientRole,
 }: RealMessagePanelProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const quickMessages = [
+    t("messagePanel", "quick1"),
+    t("messagePanel", "quick2"),
+    t("messagePanel", "quick3"),
+    t("messagePanel", "quick4"),
+  ];
+
   const [messages, setMessages] = useState<DbMessage[]>([]);
   const [input, setInput] = useState("");
   const [showQuickReplies, setShowQuickReplies] = useState(true);
@@ -143,7 +147,7 @@ export default function RealMessagePanel({
     setRateLimitError("");
     const rateCheck = await checkMessageRateLimit(user.id, recipientId);
     if (!rateCheck.allowed) {
-      setRateLimitError(rateCheck.reason || "发送频率受限");
+      setRateLimitError(rateCheck.reason || t("messagePanel", "rateLimited"));
       return;
     }
 
@@ -181,7 +185,7 @@ export default function RealMessagePanel({
 
     if (!file.type.startsWith("image/")) return;
     if (file.size > 10 * 1024 * 1024) {
-      setRateLimitError("图片最大 10MB");
+      setRateLimitError(t("messagePanel", "imageSizeError"));
       return;
     }
 
@@ -193,7 +197,7 @@ export default function RealMessagePanel({
       id: `temp-img-${Date.now()}`,
       sender_id: user.id,
       receiver_id: recipientId,
-      content: "[图片]",
+      content: t("messagePanel", "imageLabel"),
       content_type: "image",
       media_url: previewUrl,
       is_read: false,
@@ -204,7 +208,7 @@ export default function RealMessagePanel({
     const cloudUrl = await uploadToCloudinary(file);
 
     if (cloudUrl) {
-      const sentMsg = await sendMessage(user.id, recipientId, "[图片]", "image", cloudUrl);
+      const sentMsg = await sendMessage(user.id, recipientId, t("messagePanel", "imageLabel"), "image", cloudUrl);
       if (sentMsg) {
         setMessages((prev) =>
           prev.map((m) => (m.id === optimisticMsg.id ? sentMsg : m))
@@ -212,7 +216,7 @@ export default function RealMessagePanel({
       }
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticMsg.id));
-      setRateLimitError("图片上传失败，请重试");
+      setRateLimitError(t("messagePanel", "imageUploadFailed"));
     }
 
     URL.revokeObjectURL(previewUrl);
@@ -231,7 +235,7 @@ export default function RealMessagePanel({
       id: `temp-stk-${Date.now()}`,
       sender_id: user.id,
       receiver_id: recipientId,
-      content: sticker.name || "[表情]",
+      content: sticker.name || t("messagePanel", "stickerLabel"),
       content_type: "sticker",
       media_url: sticker.image_url,
       is_read: false,
@@ -242,7 +246,7 @@ export default function RealMessagePanel({
     const sentMsg = await sendMessage(
       user.id,
       recipientId,
-      sticker.name || "[表情]",
+      sticker.name || t("messagePanel", "stickerLabel"),
       "sticker",
       sticker.image_url
     );
@@ -261,7 +265,7 @@ export default function RealMessagePanel({
 
     if (!file.type.startsWith("image/")) return;
     if (file.size > 2 * 1024 * 1024) {
-      setRateLimitError("表情包最大 2MB");
+      setRateLimitError(t("messagePanel", "stickerSizeError"));
       return;
     }
 
@@ -304,7 +308,7 @@ export default function RealMessagePanel({
         <div className="cursor-pointer" onClick={() => setPreviewImage(msg.media_url)}>
           <img
             src={msg.media_url}
-            alt="图片消息"
+            alt={t("messagePanel", "imageAlt")}
             className="max-w-[240px] max-h-[200px] rounded-lg object-cover"
           />
         </div>
@@ -315,7 +319,7 @@ export default function RealMessagePanel({
       return (
         <img
           src={msg.media_url}
-          alt={msg.content || "表情"}
+          alt={msg.content || t("messagePanel", "stickerAlt")}
           className="w-24 h-24 object-contain"
         />
       );
@@ -348,7 +352,7 @@ export default function RealMessagePanel({
             >
               <img
                 src={previewImage}
-                alt="预览"
+                alt={t("messagePanel", "previewAlt")}
                 className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
               />
               <button
@@ -383,7 +387,7 @@ export default function RealMessagePanel({
               </div>
               <div className="flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-emerald-400">在线</span>
+                <span className="text-xs text-emerald-400">{t("common", "online")}</span>
               </div>
               <button
                 onClick={onClose}
@@ -398,7 +402,7 @@ export default function RealMessagePanel({
               {loadingHistory && (
                 <div className="text-center py-8">
                   <div className="inline-block h-6 w-6 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-                  <p className="mt-2 text-xs text-neutral-500">加载聊天记录...</p>
+                  <p className="mt-2 text-xs text-neutral-500">{t("messagePanel", "loadingHistory")}</p>
                 </div>
               )}
 
@@ -421,7 +425,7 @@ export default function RealMessagePanel({
                   </p>
                   <div className="mt-4 mx-auto max-w-[280px] rounded-xl bg-white/5 border border-white/10 p-3">
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      👋 向 {recipientName} 发送第一条消息，开始你们的合作之旅！
+                      {t("messagePanel", "emptyChat").replace("{name}", recipientName)}
                     </p>
                   </div>
                 </motion.div>
@@ -473,7 +477,7 @@ export default function RealMessagePanel({
                                 : "text-[#050505]/50"
                             }`}
                           >
-                            {msg.is_read ? "✓✓ 已读" : "✓"}
+                            {msg.is_read ? t("messagePanel", "read") : t("messagePanel", "sent")}
                           </span>
                         )}
                       </div>
@@ -494,7 +498,7 @@ export default function RealMessagePanel({
                   exit={{ opacity: 0, y: 10 }}
                   className="border-t border-white/5 px-5 py-3"
                 >
-                  <p className="text-xs text-neutral-500 mb-2">快捷消息</p>
+                  <p className="text-xs text-neutral-500 mb-2">{t("messagePanel", "quickMessages")}</p>
                   <div className="space-y-2">
                     {quickMessages.map((msg) => (
                       <button
@@ -520,7 +524,7 @@ export default function RealMessagePanel({
                   className="border-t border-white/10 bg-[#111] px-4 py-3 max-h-[220px] overflow-y-auto"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-neutral-500">我的表情包</p>
+                    <p className="text-xs text-neutral-500">{t("messagePanel", "myStickers")}</p>
                     <div className="flex items-center gap-2">
                       <input
                         ref={stickerInputRef}
@@ -539,7 +543,7 @@ export default function RealMessagePanel({
                         ) : (
                           <Plus className="h-3 w-3" />
                         )}
-                        添加
+                        {t("messagePanel", "addSticker")}
                       </button>
                     </div>
                   </div>
@@ -550,12 +554,12 @@ export default function RealMessagePanel({
                     </div>
                   ) : stickers.length === 0 ? (
                     <div className="text-center py-6">
-                      <p className="text-xs text-neutral-600">还没有表情包</p>
+                      <p className="text-xs text-neutral-600">{t("messagePanel", "noStickers")}</p>
                       <button
                         onClick={() => stickerInputRef.current?.click()}
                         className="mt-2 text-xs text-[#5CC8D6] hover:text-[#7AD4DF] cursor-pointer"
                       >
-                        上传第一个表情包 →
+                        {t("messagePanel", "uploadFirst")}
                       </button>
                     </div>
                   ) : (
@@ -568,7 +572,7 @@ export default function RealMessagePanel({
                           >
                             <img
                               src={s.image_url}
-                              alt={s.name || "表情"}
+                              alt={s.name || t("messagePanel", "stickerAlt")}
                               className="w-full h-full object-contain p-1"
                             />
                           </button>
@@ -609,7 +613,7 @@ export default function RealMessagePanel({
                   onClick={() => imageInputRef.current?.click()}
                   disabled={uploadingImage}
                   className="rounded-lg p-2 text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
-                  title="发送图片"
+                  title={t("messagePanel", "sendImage")}
                 >
                   {uploadingImage ? (
                     <Loader2 className="h-4 w-4 animate-spin text-[#5CC8D6]" />
@@ -626,7 +630,7 @@ export default function RealMessagePanel({
                       ? "bg-[#5CC8D6]/15 text-[#5CC8D6]"
                       : "text-neutral-400 hover:bg-white/10 hover:text-white"
                   }`}
-                  title="表情包"
+                  title={t("messagePanel", "stickersTitle")}
                 >
                   <Smile className="h-4 w-4" />
                 </button>
@@ -640,7 +644,7 @@ export default function RealMessagePanel({
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onFocus={() => setShowStickerPanel(false)}
-                    placeholder={`给 ${recipientName} 发消息...`}
+                    placeholder={t("messagePanel", "inputPlaceholder").replace("{name}", recipientName)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50 transition-colors"
                   />
                 </div>

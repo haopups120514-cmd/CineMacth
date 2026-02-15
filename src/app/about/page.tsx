@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import PageBackground from "@/components/PageBackground";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const techStack = [
   "Next.js",
@@ -21,6 +22,8 @@ const techStack = [
 ];
 
 export default function AboutPage() {
+  const { t } = useLanguage();
+
   return (
     <section className="relative min-h-screen">
       <PageBackground />
@@ -35,23 +38,20 @@ export default function AboutPage() {
           {/* 小标签 */}
           <span className="inline-flex items-center gap-2 rounded-full border border-[#5CC8D6]/30 bg-[#5CC8D6]/10 px-4 py-1.5 text-xs text-[#5CC8D6]">
             <Heart className="h-3 w-3" />
-            The Mission
+            {t("aboutPage", "missionLabel")}
           </span>
 
           <h1 className="mt-6 text-3xl font-extrabold leading-snug text-white md:text-5xl">
-            为什么东京的夜晚
+            {t("aboutPage", "missionTitle1")}
             <br />
-            需要 <span className="text-[#5CC8D6]">CineMatch</span>？
+            {t("aboutPage", "missionTitle2")} <span className="text-[#5CC8D6]">CineMatch</span>？
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-neutral-400 md:text-lg">
-            在东京，有无数像我一样的留学生怀揣电影梦，却因为找不到录音师、灯光师而不得不放弃。
-            从新宿到下北泽，从涩谷到吉祥寺，散落着太多孤独的创作者——他们有才华、有热情，却彼此看不见。
+            {t("aboutPage", "missionP1")}
           </p>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-400 md:text-lg">
-            <span className="text-white font-medium">CineMatch 致力于连接每一个孤独的创作者。</span>
-            让一个有剧本的导演能找到愿意用周末时间来帮忙的摄影师；
-            让一个刚买了 Sony FX3 的留学生能加入一个真正的剧组。
+            {t("aboutPage", "missionP2")}
           </p>
         </motion.div>
 
@@ -82,7 +82,7 @@ export default function AboutPage() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[#5CC8D6]/30 bg-[#5CC8D6]/10 px-4 py-1.5 text-xs text-[#5CC8D6]">
             <Code className="h-3 w-3" />
-            The Creator
+            {t("aboutPage", "creatorLabel")}
           </span>
 
           <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start">
@@ -97,33 +97,29 @@ export default function AboutPage() {
               </div>
               <div className="mt-3 flex items-center gap-2 text-sm text-neutral-500">
                 <MapPin className="h-3.5 w-3.5" />
-                东京, 日本
+                {t("aboutPage", "location")}
               </div>
             </div>
 
             {/* 文字介绍 */}
             <div className="flex-1">
               <h2 className="text-2xl font-extrabold text-white md:text-3xl">
-                关于 <span className="text-[#5CC8D6]">Koko</span>
+                {t("aboutPage", "aboutKoko")} <span className="text-[#5CC8D6]">Koko</span>
                 <span className="ml-2 text-base font-normal text-neutral-500">
                   (Hu Haoyu)
                 </span>
               </h2>
 
               <p className="mt-4 text-base leading-relaxed text-neutral-400">
-                我是一名生活在东京的 00 后创作者。作为一个 INTP，
-                我习惯用逻辑去解构世界，再用影像去重组它。
+                {t("aboutPage", "kokoP1")}
               </p>
               <p className="mt-3 text-base leading-relaxed text-neutral-400">
-                我不满足于仅仅作为画面的记录者，
-                我更希望成为<span className="text-white font-medium">连接者的构建者</span>。
-                CineMatch 是我用代码对电影制作流程的一次重新思考——
-                在繁华却疏离的东京，让每一个孤独的创意灵魂都能找到共鸣。
+                {t("aboutPage", "kokoP2")}<strong>{t("aboutPage", "kokoP2Bold")}</strong>{t("aboutPage", "kokoP2End")}
               </p>
 
               {/* INTP 标签 */}
               <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-xs text-purple-400">
-                INTP · 分析者
+                {t("aboutPage", "intp")}
               </div>
 
               {/* Tech Stack */}
@@ -155,14 +151,14 @@ export default function AboutPage() {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[#5CC8D6]/30 bg-[#5CC8D6]/10 px-4 py-1.5 text-xs text-[#5CC8D6]">
             <Sparkles className="h-3 w-3" />
-            Visuals
+            {t("aboutPage", "visualsLabel")}
           </span>
 
           <h2 className="mt-6 text-2xl font-extrabold text-white md:text-3xl">
-            影像与代码的结合
+            {t("aboutPage", "visualsTitle")}
           </h2>
           <p className="mt-3 text-base text-neutral-400">
-            不只是写代码——每一帧画面，每一行代码，都是对美的追求。
+            {t("aboutPage", "visualsDesc")}
           </p>
 
           {/* 照片墙 */}
@@ -211,8 +207,8 @@ export default function AboutPage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6">
-                <p className="text-sm font-medium text-white/80">创作集锦</p>
-                <p className="mt-1 text-xs text-white/50">东京 · 影像记录</p>
+                <p className="text-sm font-medium text-white/80">{t("aboutPage", "gallery")}</p>
+                <p className="mt-1 text-xs text-white/50">{t("aboutPage", "gallerySubtitle")}</p>
               </div>
             </div>
           </motion.div>
@@ -226,21 +222,21 @@ export default function AboutPage() {
           className="mt-24 text-center"
         >
           <p className="text-lg text-neutral-400">
-            准备好开始了吗？
+            {t("aboutPage", "ctaReady")}
           </p>
           <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/find-crew"
               className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-8 py-3 text-base font-semibold text-[#050505] transition-all hover:bg-[#7AD4DF]"
             >
-              招募创作伙伴
+              {t("aboutPage", "ctaRecruit")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/projects"
               className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-3 text-base font-semibold text-white transition-all hover:bg-white/10"
             >
-              加入拍摄计划
+              {t("aboutPage", "ctaJoin")}
             </Link>
           </div>
         </motion.div>
@@ -253,10 +249,10 @@ export default function AboutPage() {
           className="mt-24 rounded-2xl border border-white/10 bg-white/5 p-8 text-center md:p-12"
         >
           <h2 className="text-2xl font-extrabold text-white">
-            联系我
+            {t("aboutPage", "contactTitle")}
           </h2>
           <p className="mt-3 text-base text-neutral-400">
-            有任何想法或建议？欢迎直接发送邮件
+            {t("aboutPage", "contactDesc")}
           </p>
           <a
             href="mailto:haopups120514@gmail.com"

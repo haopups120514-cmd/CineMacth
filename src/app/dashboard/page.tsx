@@ -16,10 +16,12 @@ import {
   Upload
 } from "lucide-react";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PageBackground from "@/components/PageBackground";
 
 export default function DashboardPage() {
   const { user, session, signOut, loading, userProfile } = useContext(AuthContext);
+  const { t } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function DashboardPage() {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
         <PageBackground />
-        <div className="relative z-10 text-white">Loading...</div>
+        <div className="relative z-10 text-white">{t("common", "loadingAlt")}</div>
       </div>
     );
   }
@@ -57,7 +59,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between gap-6">
             <div className="flex-1">
               <h1 className="text-3xl font-extrabold text-white md:text-4xl">
-                欢迎回来！
+                {t("dashboard", "welcome")}
               </h1>
               <p className="mt-2 text-lg text-neutral-400">
                 {user?.email}
@@ -67,7 +69,7 @@ export default function DashboardPage() {
             <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl border border-[#5CC8D6]/30 bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0">
               <img
                 src={userProfile?.avatar_url || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user?.id}`}
-                alt={user?.email || "用户"}
+                alt={user?.email || t("common", "user")}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -81,7 +83,7 @@ export default function DashboardPage() {
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition-all hover:bg-red-500/20"
             >
               <LogOut className="h-4 w-4" />
-              登出
+              {t("common", "logout")}
             </button>
           </div>
         </motion.div>
@@ -104,8 +106,8 @@ export default function DashboardPage() {
                       <User className="h-6 w-6 text-[#5CC8D6]" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">个人资料</h3>
-                      <p className="text-sm text-neutral-400">编辑你的个人信息</p>
+                      <h3 className="font-semibold text-white">{t("dashboard", "profile")}</h3>
+                      <p className="text-sm text-neutral-400">{t("dashboard", "profileDesc")}</p>
                     </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-[#5CC8D6] transition-colors" />
@@ -125,8 +127,8 @@ export default function DashboardPage() {
                       <MessageCircle className="h-6 w-6 text-purple-400" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">我的私信</h3>
-                      <p className="text-sm text-neutral-400">查看对话</p>
+                      <h3 className="font-semibold text-white">{t("dashboard", "myMessages")}</h3>
+                      <p className="text-sm text-neutral-400">{t("dashboard", "viewConversations")}</p>
                     </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-neutral-600 group-hover:text-purple-400 transition-colors" />
@@ -144,8 +146,8 @@ export default function DashboardPage() {
           className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-extrabold text-white">接下来做什么?</h2>
-            <p className="mt-2 text-neutral-400">探索 CineMatch 的各个部分</p>
+            <h2 className="text-2xl font-extrabold text-white">{t("dashboard", "whatNext")}</h2>
+            <p className="mt-2 text-neutral-400">{t("dashboard", "exploreDesc")}</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -156,8 +158,8 @@ export default function DashboardPage() {
                   <Users className="h-5 w-5 text-[#5CC8D6]" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white">人才库</h3>
-                  <p className="text-sm text-neutral-400">招募创作伙伴</p>
+                  <h3 className="font-semibold text-white">{t("dashboard", "talentPool")}</h3>
+                  <p className="text-sm text-neutral-400">{t("dashboard", "recruitPartner")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-[#5CC8D6] transition-colors" />
               </div>
@@ -170,8 +172,8 @@ export default function DashboardPage() {
                   <Upload className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white">作品集</h3>
-                  <p className="text-sm text-neutral-400">上传你的作品</p>
+                  <h3 className="font-semibold text-white">{t("dashboard", "portfolio")}</h3>
+                  <p className="text-sm text-neutral-400">{t("dashboard", "uploadWorks")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-emerald-400 transition-colors" />
               </div>
@@ -184,8 +186,8 @@ export default function DashboardPage() {
                   <Megaphone className="h-5 w-5 text-purple-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white">机会广场</h3>
-                  <p className="text-sm text-neutral-400">加入拍摄计划</p>
+                  <h3 className="font-semibold text-white">{t("dashboard", "opportunities")}</h3>
+                  <p className="text-sm text-neutral-400">{t("dashboard", "joinPlans")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-neutral-600 group-hover:text-purple-400 transition-colors" />
               </div>
@@ -203,15 +205,15 @@ export default function DashboardPage() {
           <div className="flex items-start gap-4">
             <Heart className="h-5 w-5 text-[#5CC8D6] flex-shrink-0 mt-1" />
             <div>
-              <h3 className="font-semibold text-white">CineMatch 使命</h3>
+              <h3 className="font-semibold text-white">{t("dashboard", "mission")}</h3>
               <p className="mt-2 text-sm text-neutral-400">
-                连接东京的孤独创作者，让每一个有梦想的电影人都能找到共鸣。
+                {t("dashboard", "missionDesc")}
               </p>
               <Link
                 href="/about"
                 className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#5CC8D6] hover:text-[#7AD4DF] transition-colors"
               >
-                了解更多 <ArrowRight className="h-3 w-3" />
+                {t("dashboard", "learnMore")} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </div>

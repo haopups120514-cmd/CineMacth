@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import type { CrewFilters, CrewRole, VisualStyle, Equipment } from "@/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FilterBarProps {
   filters: CrewFilters;
@@ -18,6 +19,27 @@ const equipments: Equipment[] = [
   "无人机",
   "稳定器",
 ];
+
+const roleTranslationKeys: Record<CrewRole, string> = {
+  "摄影": "photography",
+  "灯光": "lighting",
+  "美术": "art",
+  "录音": "sound",
+};
+
+const styleTranslationKeys: Record<VisualStyle, string> = {
+  "日系": "japanese",
+  "赛博": "cyber",
+  "胶片": "film",
+  "纪实": "documentary",
+  "复古": "retro",
+};
+
+const equipmentTranslationKeys: Record<string, string> = {
+  "有车": "hasCar",
+  "无人机": "drone",
+  "稳定器": "stabilizer",
+};
 
 function FilterPill({
   label,
@@ -43,6 +65,7 @@ function FilterPill({
 }
 
 export default function FilterBar({ filters, onChange }: FilterBarProps) {
+  const { t } = useLanguage();
   const hasFilters = filters.role || filters.style || filters.equipment;
 
   const toggleRole = (role: CrewRole) => {
@@ -64,12 +87,12 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         {/* 职业 */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-2 text-xs font-medium text-neutral-500 w-12">
-            职业
+            {t("filter", "profession")}
           </span>
           {roles.map((r) => (
             <FilterPill
               key={r}
-              label={r}
+              label={t("filter", roleTranslationKeys[r])}
               active={filters.role === r}
               onClick={() => toggleRole(r)}
             />
@@ -79,12 +102,12 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         {/* 风格 */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-2 text-xs font-medium text-neutral-500 w-12">
-            风格
+            {t("filter", "style")}
           </span>
           {styles.map((s) => (
             <FilterPill
               key={s}
-              label={s}
+              label={t("filter", styleTranslationKeys[s])}
               active={filters.style === s}
               onClick={() => toggleStyle(s)}
             />
@@ -94,12 +117,12 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
         {/* 设备 */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="mr-2 text-xs font-medium text-neutral-500 w-12">
-            设备
+            {t("filter", "equipment")}
           </span>
           {equipments.map((e) => (
             <FilterPill
               key={e}
-              label={e}
+              label={equipmentTranslationKeys[e] ? t("filter", equipmentTranslationKeys[e]) : e}
               active={filters.equipment === e}
               onClick={() => toggleEquipment(e)}
             />
@@ -113,7 +136,7 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
           className="mt-4 flex items-center gap-1 text-xs text-neutral-500 hover:text-white transition-colors cursor-pointer"
         >
           <X className="h-3 w-3" />
-          清除筛选
+          {t("filter", "clearFilter")}
         </button>
       )}
     </div>

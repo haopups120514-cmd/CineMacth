@@ -4,18 +4,21 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getUnreadCount } from "@/lib/database";
-
-const navLinks = [
-  { label: "人才库", href: "/crew" },
-  { label: "机会广场", href: "/projects" },
-  { label: "计划", href: "/plans" },
-  { label: "关于", href: "/about" },
-];
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function Navbar() {
   const { user, loading, signOut, userProfile } = useAuth();
+  const { t } = useLanguage();
   const [unreadMessages, setUnreadMessages] = useState(0);
+
+  const navLinks = [
+    { label: t("nav", "talent"), href: "/crew" },
+    { label: t("nav", "opportunities"), href: "/projects" },
+    { label: t("nav", "plans"), href: "/plans" },
+    { label: t("nav", "about"), href: "/about" },
+  ];
 
   // 定时检查未读消息
   useEffect(() => {
@@ -49,16 +52,20 @@ export default function Navbar() {
         ))}
 
         {!loading && !user && (
-          <Link
-            href="/login"
-            className="px-5 py-2 text-sm font-medium text-white rounded-lg bg-white/10 backdrop-blur-sm border border-white/15 hover:bg-white/20 transition-all"
-          >
-            登录
-          </Link>
+          <>
+            <LanguageSwitcher />
+            <Link
+              href="/login"
+              className="px-5 py-2 text-sm font-medium text-white rounded-lg bg-white/10 backdrop-blur-sm border border-white/15 hover:bg-white/20 transition-all"
+            >
+              {t("nav", "login")}
+            </Link>
+          </>
         )}
 
         {!loading && user && (
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {/* 私信入口 */}
             <Link
               href="/messages"
@@ -80,7 +87,7 @@ export default function Navbar() {
               <div className="w-8 h-8 rounded-full border border-[#5CC8D6]/30 bg-white/10 flex items-center justify-center overflow-hidden">
                 <img
                   src={userProfile?.avatar_url || `https://api.dicebear.com/9.x/adventurer/svg?seed=${user.id}`}
-                  alt={user.email || "用户"}
+                  alt={user.email || t("common", "user")}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.currentTarget.src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${user.id}`;
@@ -96,7 +103,7 @@ export default function Navbar() {
               onClick={signOut}
               className="px-4 py-2 text-sm text-neutral-400 hover:text-white transition-colors cursor-pointer"
             >
-              登出
+              {t("nav", "logout")}
             </button>
           </div>
         )}

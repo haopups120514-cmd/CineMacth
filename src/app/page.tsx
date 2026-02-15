@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   fetchRecruitments,
   createRecruitment,
@@ -34,6 +35,7 @@ import {
 
 export default function Home() {
   const { user, session, userProfile } = useContext(AuthContext);
+  const { t } = useLanguage();
   const [recruitments, setRecruitments] = useState<(DbRecruitment & { poster?: DbProfile })[]>([]);
   const [loadingRecruitments, setLoadingRecruitments] = useState(true);
   const [showPostForm, setShowPostForm] = useState(false);
@@ -75,7 +77,7 @@ export default function Home() {
 
   const handlePost = async () => {
     if (!user || !postForm.title.trim() || !postForm.role_needed.trim()) {
-      setPostError("请填写标题和招募职位");
+      setPostError(t("home", "formError"));
       return;
     }
 
@@ -98,13 +100,13 @@ export default function Home() {
         description: "",
         role_needed: "",
         location: "",
-        compensation: "可谈",
+        compensation: t("home", "compNegotiable"),
         shoot_date: "",
       });
       setShowPostForm(false);
       loadRecruitments();
     } else {
-      setPostError("发布失败，请重试");
+      setPostError(t("home", "postFailed"));
     }
     setPosting(false);
   };
@@ -143,24 +145,24 @@ export default function Home() {
           >
             <div>
               <h1 className="text-2xl font-extrabold text-white sm:text-3xl">
-                找到你的<span className="text-[#5CC8D6]">创作伙伴</span>
+                {t("home", "heroTitle1")}<span className="text-[#5CC8D6]">{t("home", "heroTitle2")}</span>
               </h1>
               <p className="mt-2 text-sm text-neutral-400">
-                连接东京学生电影创作者的平台
+                {t("home", "heroSubtitle")}
               </p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/find-crew" className="group flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
                 <Users className="h-4 w-4" />
-                招募伙伴
+                {t("home", "recruitPartner")}
               </Link>
               <Link href="/projects" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
                 <Megaphone className="h-4 w-4" />
-                通告板
+                {t("home", "board")}
               </Link>
               <Link href="/plans" className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition-all">
                 <ClipboardList className="h-4 w-4" />
-                我的计划
+                {t("home", "myPlans")}
               </Link>
             </div>
           </motion.div>
@@ -185,7 +187,7 @@ export default function Home() {
                   </p>
                   <div className="flex items-center gap-1 text-xs text-amber-400">
                     <Shield className="h-3 w-3" />
-                    信用分 {userProfile?.credit_score ?? 80}
+                    {t("common", "creditScore")} {userProfile?.credit_score ?? 80}
                   </div>
                 </div>
               </div>
@@ -195,14 +197,14 @@ export default function Home() {
                   className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/10 transition-all w-full"
                 >
                   <MessageCircle className="h-3.5 w-3.5 text-[#5CC8D6]" />
-                  我的私信
+                  {t("home", "myMessages")}
                 </Link>
                 <Link
                   href="/profile"
                   className="flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/10 transition-all w-full"
                 >
                   <User className="h-3.5 w-3.5 text-[#5CC8D6]" />
-                  编辑资料
+                  {t("home", "editProfile")}
                 </Link>
               </div>
             </motion.div>
@@ -214,9 +216,9 @@ export default function Home() {
               className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-5 flex flex-col items-center justify-center text-center"
             >
               <Shield className="h-8 w-8 text-[#5CC8D6] mb-3" />
-              <p className="text-sm text-neutral-400 mb-3">登录后解锁全部功能</p>
+              <p className="text-sm text-neutral-400 mb-3">{t("home", "unlockFeatures")}</p>
               <Link href="/login" className="rounded-xl bg-[#5CC8D6] px-5 py-2 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
-                登录 / 注册
+                {t("home", "loginRegister")}
               </Link>
             </motion.div>
           )}
@@ -235,10 +237,10 @@ export default function Home() {
               <div>
                 <h2 className="text-3xl font-extrabold text-white flex items-center gap-3">
                   <Briefcase className="h-8 w-8 text-[#5CC8D6]" />
-                  招聘信息
+                  {t("home", "recruitmentSection")}
                 </h2>
                 <p className="mt-2 text-neutral-400">
-                  发布你的拍摄计划，寻找合适的创作伙伴
+                  {t("home", "recruitmentDesc")}
                 </p>
               </div>
               {session && (
@@ -247,7 +249,7 @@ export default function Home() {
                   className="flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-5 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all cursor-pointer"
                 >
                   <Plus className="h-4 w-4" />
-                  发布招聘
+                  {t("home", "postRecruitment")}
                 </button>
               )}
             </div>
@@ -262,7 +264,7 @@ export default function Home() {
                   className="mb-8 rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold text-white">发布招聘信息</h3>
+                    <h3 className="text-base font-semibold text-white">{t("home", "postRecruitmentTitle")}</h3>
                     <button
                       onClick={() => { setShowPostForm(false); setPostError(""); }}
                       className="rounded-lg p-1 text-neutral-400 hover:bg-white/10 hover:text-white cursor-pointer"
@@ -282,7 +284,7 @@ export default function Home() {
                       type="text"
                       value={postForm.title}
                       onChange={(e) => setPostForm((p) => ({ ...p, title: e.target.value }))}
-                      placeholder="项目标题 *（如：毕业短片《xxx》招募摄影师）"
+                      placeholder={t("home", "titlePlaceholder")}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50"
                     />
 
@@ -291,14 +293,14 @@ export default function Home() {
                         type="text"
                         value={postForm.role_needed}
                         onChange={(e) => setPostForm((p) => ({ ...p, role_needed: e.target.value }))}
-                        placeholder="招募职位 *（如：摄影师、灯光师）"
+                        placeholder={t("home", "rolePlaceholder")}
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50"
                       />
                       <input
                         type="text"
                         value={postForm.location}
                         onChange={(e) => setPostForm((p) => ({ ...p, location: e.target.value }))}
-                        placeholder="拍摄地点（如：东京・新宿）"
+                        placeholder={t("home", "locationPlaceholder")}
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50"
                       />
                     </div>
@@ -309,17 +311,17 @@ export default function Home() {
                         onChange={(e) => setPostForm((p) => ({ ...p, compensation: e.target.value }))}
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#5CC8D6]/50"
                       >
-                        <option value="可谈">可谈</option>
-                        <option value="有薪">有薪</option>
-                        <option value="包食宿">包食宿</option>
-                        <option value="互免">互免</option>
-                        <option value="志愿">志愿</option>
+                        <option value="可谈">{t("home", "compNegotiable")}</option>
+                        <option value="有薪">{t("home", "compPaid")}</option>
+                        <option value="包食宿">{t("home", "compAccom")}</option>
+                        <option value="互免">{t("home", "compExchange")}</option>
+                        <option value="志愿">{t("home", "compVolunteer")}</option>
                       </select>
                       <input
                         type="text"
                         value={postForm.shoot_date}
                         onChange={(e) => setPostForm((p) => ({ ...p, shoot_date: e.target.value }))}
-                        placeholder="拍摄日期（如：3月中旬）"
+                        placeholder={t("home", "datePlaceholder")}
                         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50"
                       />
                     </div>
@@ -327,7 +329,7 @@ export default function Home() {
                     <textarea
                       value={postForm.description}
                       onChange={(e) => setPostForm((p) => ({ ...p, description: e.target.value }))}
-                      placeholder="项目描述（选填，拍摄内容、要求等）"
+                      placeholder={t("home", "descriptionPlaceholder")}
                       rows={3}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50 resize-none"
                     />
@@ -340,12 +342,12 @@ export default function Home() {
                       {posting ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin" />
-                          发布中...
+                          {t("home", "posting")}
                         </>
                       ) : (
                         <>
                           <Megaphone className="h-5 w-5" />
-                          发布招聘信息
+                          {t("home", "postRecruitmentBtn")}
                         </>
                       )}
                     </button>
@@ -358,18 +360,18 @@ export default function Home() {
             {loadingRecruitments ? (
               <div className="text-center py-12">
                 <div className="inline-block h-8 w-8 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-                <p className="mt-3 text-neutral-500 text-sm">加载中...</p>
+                <p className="mt-3 text-neutral-500 text-sm">{t("common", "loading")}</p>
               </div>
             ) : recruitments.length === 0 ? (
               <div className="text-center py-16 rounded-xl border border-dashed border-white/10">
                 <Briefcase className="mx-auto h-10 w-10 text-neutral-600" />
-                <p className="mt-3 text-neutral-500">暂无招聘信息</p>
+                <p className="mt-3 text-neutral-500">{t("home", "noRecruitments")}</p>
                 {session && (
                   <button
                     onClick={() => setShowPostForm(true)}
                     className="mt-4 text-sm text-[#5CC8D6] hover:text-[#7AD4DF] cursor-pointer"
                   >
-                    发布第一条招聘 →
+                    {t("home", "postFirst")}
                   </button>
                 )}
                 {!session && (
@@ -377,7 +379,7 @@ export default function Home() {
                     href="/login"
                     className="mt-4 inline-block text-sm text-[#5CC8D6] hover:text-[#7AD4DF]"
                   >
-                    登录后发布招聘 →
+                    {t("home", "loginToPost")}
                   </Link>
                 )}
               </div>
@@ -440,7 +442,7 @@ export default function Home() {
                             className="h-5 w-5 rounded-full bg-neutral-800"
                           />
                           <span className="text-xs text-neutral-500">
-                            {item.poster ? getDisplayName(item.poster) : "未知用户"}
+                            {item.poster ? getDisplayName(item.poster) : t("common", "unknownUser")}
                           </span>
                           <span className="text-xs text-neutral-600">·</span>
                           <span className="text-xs text-neutral-600">
@@ -455,7 +457,7 @@ export default function Home() {
                         {session && user?.id !== item.user_id && (
                           appliedIds.has(item.id) ? (
                             <span className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-1.5 text-xs text-green-400 flex items-center gap-1">
-                              ✓ 已申请
+                              {t("common", "applied")}
                             </span>
                           ) : (
                             <button
@@ -468,7 +470,7 @@ export default function Home() {
                               ) : (
                                 <Plus className="h-3 w-3" />
                               )}
-                              申请
+                              {t("common", "apply")}
                             </button>
                           )
                         )}
@@ -479,7 +481,7 @@ export default function Home() {
                             className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-neutral-300 hover:bg-white/10 transition-all flex items-center gap-1"
                           >
                             <User className="h-3 w-3" />
-                            联系
+                            {t("common", "contact")}
                           </Link>
                         )}
                         {/* 删除按钮（仅自己可见） */}

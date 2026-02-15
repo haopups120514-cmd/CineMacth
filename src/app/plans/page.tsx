@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { AuthContext } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   fetchUserRecruitments,
   fetchMyApplications,
@@ -52,6 +53,19 @@ const recruitmentStatuses = ["招募中", "已招到", "拍摄中", "已完成"]
 
 export default function PlansPage() {
   const { user, session } = useContext(AuthContext);
+  const { t } = useLanguage();
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      "招募中": t("plans", "statusRecruiting"),
+      "已招到": t("plans", "statusRecruited"),
+      "拍摄中": t("plans", "statusShooting"),
+      "已完成": t("plans", "statusCompleted"),
+      "待处理": t("plans", "appPending"),
+      "已接受": t("plans", "appAccepted"),
+      "已拒绝": t("plans", "appRejected"),
+    };
+    return map[s] || s;
+  };
   const [tab, setTab] = useState<Tab>("my-posts");
   const [myPosts, setMyPosts] = useState<DbRecruitment[]>([]);
   const [myApplications, setMyApplications] = useState<
@@ -175,7 +189,7 @@ export default function PlansPage() {
     );
 
     if (!eligible) {
-      alert("只有已完成的合作才能评分");
+      alert(t("plans", "rateOnlyCompleted"));
       setSubmittingReview(false);
       return;
     }
@@ -208,9 +222,9 @@ export default function PlansPage() {
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Briefcase className="mx-auto h-12 w-12 text-neutral-600 mb-4" />
-            <p className="text-neutral-400 mb-4">登录后查看你的计划</p>
+            <p className="text-neutral-400 mb-4">{t("plans", "loginHint")}</p>
             <Link href="/login" className="rounded-xl bg-[#5CC8D6] px-6 py-2.5 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all">
-              登录
+              {t("common", "login")}
             </Link>
           </div>
         </div>
@@ -229,7 +243,7 @@ export default function PlansPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-4xl font-extrabold text-white md:text-5xl"
         >
-          我的计划
+          {t("plans", "title")}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -237,7 +251,7 @@ export default function PlansPage() {
           transition={{ delay: 0.1 }}
           className="mt-3 text-lg text-neutral-400"
         >
-          管理你的招聘和申请，评价合作伙伴
+          {t("plans", "subtitle")}
         </motion.p>
 
         {/* Tab 切换 */}
@@ -256,7 +270,7 @@ export default function PlansPage() {
             }`}
           >
             <Briefcase className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-            我发布的 ({myPosts.length})
+            {t("plans", "myPosts")} ({myPosts.length})
           </button>
           <button
             onClick={() => setTab("my-applications")}
@@ -267,7 +281,7 @@ export default function PlansPage() {
             }`}
           >
             <Send className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-            我申请的 ({myApplications.length})
+            {t("plans", "myApplications")} ({myApplications.length})
           </button>
         </motion.div>
 
@@ -276,16 +290,16 @@ export default function PlansPage() {
           {loading ? (
             <div className="text-center py-16">
               <div className="inline-block h-8 w-8 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-              <p className="mt-3 text-neutral-500 text-sm">加载中...</p>
+              <p className="mt-3 text-neutral-500 text-sm">{t("common", "loading")}</p>
             </div>
           ) : tab === "my-posts" ? (
             /* ========== 我发布的 ========== */
             myPosts.length === 0 ? (
               <div className="text-center py-16 rounded-xl border border-dashed border-white/10">
                 <Briefcase className="mx-auto h-10 w-10 text-neutral-600" />
-                <p className="mt-3 text-neutral-500">你还没有发布过招聘</p>
+                <p className="mt-3 text-neutral-500">{t("plans", "noPosts")}</p>
                 <Link href="/" className="mt-4 inline-block text-sm text-[#5CC8D6] hover:text-[#7AD4DF]">
-                  去首页发布 →
+                  {t("plans", "goPost")}
                 </Link>
               </div>
             ) : (
@@ -304,7 +318,7 @@ export default function PlansPage() {
                           <div className="flex items-center gap-3 flex-wrap">
                             <h3 className="text-base font-semibold text-white">{post.title}</h3>
                             <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[post.status] || "bg-neutral-500/15 text-neutral-400"}`}>
-                              {post.status}
+                              {statusLabel(post.status)}
                             </span>
                           </div>
                           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-400">
@@ -340,7 +354,7 @@ export default function PlansPage() {
                             className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs text-neutral-300 outline-none cursor-pointer"
                           >
                             {recruitmentStatuses.map((s) => (
-                              <option key={s} value={s}>{s}</option>
+                              <option key={s} value={s}>{statusLabel(s)}</option>
                             ))}
                           </select>
 
@@ -370,14 +384,14 @@ export default function PlansPage() {
                         >
                           <div className="p-5 bg-white/[0.02]">
                             <h4 className="text-sm font-semibold text-neutral-300 mb-3">
-                              申请人 ({applications.length})
+                              {t("plans", "applicants")} ({applications.length})
                             </h4>
                             {loadingApps ? (
                               <div className="text-center py-4">
                                 <Loader2 className="h-5 w-5 animate-spin text-[#5CC8D6] mx-auto" />
                               </div>
                             ) : applications.length === 0 ? (
-                              <p className="text-sm text-neutral-500 py-3">暂无申请</p>
+                              <p className="text-sm text-neutral-500 py-3">{t("plans", "noApplicants")}</p>
                             ) : (
                               <div className="space-y-3">
                                 {applications.map((app) => (
@@ -396,7 +410,7 @@ export default function PlansPage() {
                                           href={`/find-crew/${app.applicant_id}`}
                                           className="text-sm font-medium text-white hover:text-[#5CC8D6] transition-colors"
                                         >
-                                          {app.applicant ? getDisplayName(app.applicant) : "未知"}
+                                          {app.applicant ? getDisplayName(app.applicant) : t("common", "unknown")}
                                         </Link>
                                         <p className="text-xs text-neutral-500">
                                           {formatRelativeTime(app.created_at)}
@@ -424,7 +438,7 @@ export default function PlansPage() {
                                         </>
                                       ) : (
                                         <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[app.status] || ""}`}>
-                                          {app.status}
+                                          {statusLabel(app.status)}
                                         </span>
                                       )}
 
@@ -433,19 +447,19 @@ export default function PlansPage() {
                                         reviewedPairs.has(`${post.id}:${app.applicant_id}`) ? (
                                           <span className="text-xs text-green-400 flex items-center gap-1">
                                             <Star className="h-3 w-3 fill-green-400" />
-                                            已评
+                                            {t("plans", "rated")}
                                           </span>
                                         ) : (
                                           <button
                                             onClick={() => setShowReviewForm({
                                               recruitmentId: post.id,
                                               revieweeId: app.applicant_id,
-                                              revieweeName: app.applicant ? getDisplayName(app.applicant) : "未知",
+                                              revieweeName: app.applicant ? getDisplayName(app.applicant) : t("common", "unknown"),
                                             })}
                                             className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-xs text-amber-400 hover:bg-amber-500/20 transition-all flex items-center gap-1 cursor-pointer"
                                           >
                                             <Star className="h-3 w-3" />
-                                            评分
+                                            {t("plans", "rate")}
                                           </button>
                                         )
                                       )}
@@ -467,9 +481,9 @@ export default function PlansPage() {
             myApplications.length === 0 ? (
               <div className="text-center py-16 rounded-xl border border-dashed border-white/10">
                 <Send className="mx-auto h-10 w-10 text-neutral-600" />
-                <p className="mt-3 text-neutral-500">你还没有申请过招聘</p>
+                <p className="mt-3 text-neutral-500">{t("plans", "noApplications")}</p>
                 <Link href="/" className="mt-4 inline-block text-sm text-[#5CC8D6] hover:text-[#7AD4DF]">
-                  去首页查看招聘 →
+                  {t("plans", "goApply")}
                 </Link>
               </div>
             ) : (
@@ -485,14 +499,14 @@ export default function PlansPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
                           <h3 className="text-base font-semibold text-white">
-                            {app.recruitment?.title || "已删除的招聘"}
+                            {app.recruitment?.title || t("plans", "deletedRecruitment")}
                           </h3>
                           <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[app.status] || ""}`}>
-                            {app.status}
+                            {statusLabel(app.status)}
                           </span>
                           {app.recruitment && (
                             <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${statusColors[app.recruitment.status] || ""}`}>
-                              项目: {app.recruitment.status}
+                              {t("plans", "projectStatus")}{statusLabel(app.recruitment.status)}
                             </span>
                           )}
                         </div>
@@ -539,7 +553,7 @@ export default function PlansPage() {
                             className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-neutral-300 hover:bg-white/10 transition-all flex items-center gap-1"
                           >
                             <User className="h-3 w-3" />
-                            联系
+                            {t("common", "contact")}
                           </Link>
                         )}
 
@@ -550,7 +564,7 @@ export default function PlansPage() {
                             reviewedPairs.has(`${app.recruitment_id}:${app.recruitment.user_id}`) ? (
                               <span className="text-xs text-green-400 flex items-center gap-1">
                                 <Star className="h-3 w-3 fill-green-400" />
-                                已评
+                                {t("plans", "rated")}
                               </span>
                             ) : (
                               <button
@@ -562,7 +576,7 @@ export default function PlansPage() {
                                 className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-xs text-amber-400 hover:bg-amber-500/20 transition-all flex items-center gap-1 cursor-pointer"
                               >
                                 <Star className="h-3 w-3" />
-                                评分
+                                {t("plans", "rate")}
                               </button>
                             )
                           )}
@@ -593,7 +607,7 @@ export default function PlansPage() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md rounded-2xl border border-white/10 bg-[#111318] p-6"
             >
-              <h3 className="text-lg font-bold text-white mb-1">评价合作伙伴</h3>
+              <h3 className="text-lg font-bold text-white mb-1">{t("plans", "ratePartner")}</h3>
               <p className="text-sm text-neutral-400 mb-6">
                 为 <span className="text-[#5CC8D6]">{showReviewForm.revieweeName}</span> 评分
               </p>
@@ -622,7 +636,7 @@ export default function PlansPage() {
               <textarea
                 value={reviewComment}
                 onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="写几句对合作的评价（选填）"
+                placeholder={t("plans", "reviewPlaceholder")}
                 rows={3}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-neutral-500 outline-none focus:border-[#5CC8D6]/50 resize-none mb-4"
               />
@@ -632,7 +646,7 @@ export default function PlansPage() {
                   onClick={() => setShowReviewForm(null)}
                   className="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-neutral-400 hover:bg-white/5 transition-all cursor-pointer"
                 >
-                  取消
+                  {t("common", "cancel")}
                 </button>
                 <button
                   onClick={handleSubmitReview}
@@ -644,7 +658,7 @@ export default function PlansPage() {
                   ) : (
                     <>
                       <Star className="h-4 w-4" />
-                      提交评分
+                      {t("plans", "submitRating")}
                     </>
                   )}
                 </button>

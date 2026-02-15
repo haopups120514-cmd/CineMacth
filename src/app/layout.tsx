@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 export const metadata: Metadata = {
   title: "CineMatch",
-  description: "连接东京学生电影创作者的平台",
+  description: "Connecting student filmmakers in Tokyo",
 };
 
 export default function RootLayout({
@@ -14,14 +15,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh">
+    <html lang="zh" suppressHydrationWarning>
       <body className="antialiased">
-        <AuthProvider>
-          <Navbar />
-          <main className="pt-16">
-            {children}
-          </main>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="pt-16">
+              {children}
+            </main>
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

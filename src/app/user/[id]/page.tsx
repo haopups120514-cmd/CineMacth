@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PageBackground from "@/components/PageBackground";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserProfile {
   id: string;
@@ -26,6 +27,7 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -37,7 +39,7 @@ export default function UserProfilePage() {
           .single();
 
         if (fetchError) {
-          setError("用户资料不存在");
+          setError(t("userPage", "notFound"));
           return;
         }
 
@@ -45,7 +47,7 @@ export default function UserProfilePage() {
           setProfile(data);
         }
       } catch (err) {
-        setError("加载资料失败，请重试");
+        setError(t("userPage", "loadFailed"));
         console.error("Error:", err);
       } finally {
         setLoading(false);
@@ -59,7 +61,7 @@ export default function UserProfilePage() {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
         <PageBackground />
-        <div className="relative z-10 text-white">加载中...</div>
+        <div className="relative z-10 text-white">{t("common", "loading")}</div>
       </div>
     );
   }
@@ -69,10 +71,10 @@ export default function UserProfilePage() {
       <div className="relative min-h-screen flex items-center justify-center">
         <PageBackground />
         <div className="relative z-10 text-center">
-          <p className="text-white mb-4">{error || "用户资料不存在"}</p>
+          <p className="text-white mb-4">{error || t("userPage", "notFound")}</p>
           <Link href="/crew" className="inline-flex items-center gap-2 text-[#5CC8D6] hover:text-[#7AD4DF]">
             <ChevronLeft className="h-4 w-4" />
-            返回人才库
+            {t("userPage", "backToTalent")}
           </Link>
         </div>
       </div>
@@ -96,7 +98,7 @@ export default function UserProfilePage() {
             className="inline-flex items-center gap-2 text-[#5CC8D6] hover:text-[#7AD4DF] transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            返回人才库
+            {t("userPage", "backToTalent")}
           </Link>
         </motion.div>
 
@@ -131,7 +133,7 @@ export default function UserProfilePage() {
               </h1>
               {profile.full_name && (
                 <p className="text-sm text-neutral-400 mb-3">
-                  全名：{profile.full_name}
+                  {t("userPage", "fullName")}{profile.full_name}
                 </p>
               )}
               {profile.role && (
@@ -149,7 +151,7 @@ export default function UserProfilePage() {
           {profile.bio && (
             <div className="mb-6">
               <h2 className="text-sm font-semibold text-neutral-300 mb-2">
-                个人简介
+                {t("userPage", "bio")}
               </h2>
               <p className="text-base text-neutral-300 leading-relaxed">
                 {profile.bio}
@@ -161,7 +163,7 @@ export default function UserProfilePage() {
           {profile.styles && profile.styles.length > 0 && (
             <div className="mb-6">
               <h2 className="text-sm font-semibold text-neutral-300 mb-3">
-                创作风格
+                {t("userPage", "creativeStyles")}
               </h2>
               <div className="flex flex-wrap gap-2">
                 {profile.styles.map((style) => (
@@ -180,7 +182,7 @@ export default function UserProfilePage() {
           {profile.equipment && (
             <div className="mb-6">
               <h2 className="text-sm font-semibold text-neutral-300 mb-2">
-                拥有的设备
+                {t("userPage", "equipment")}
               </h2>
               <p className="text-base text-neutral-300">
                 {profile.equipment}
@@ -191,7 +193,7 @@ export default function UserProfilePage() {
           {/* 联系提示 */}
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-sm text-neutral-400">
-              💡 在人才库中查看或联系这位创作者
+              {t("userPage", "tip")}
             </p>
           </div>
         </motion.div>

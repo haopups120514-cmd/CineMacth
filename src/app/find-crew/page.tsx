@@ -9,10 +9,11 @@ import FilterBar from "@/components/FilterBar";
 import CrewCard from "@/components/CrewCard";
 import { mockCrew } from "@/data/mock-crew";
 import { fetchAllProfiles, getDisplayName, getAvatarUrl, type DbProfile } from "@/lib/database";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { CrewFilters, CrewMember, VisualStyle, Equipment, CrewRole } from "@/types";
 
 // 将数据库用户资料转为 CrewMember 兼容格式
-function profileToCrewMember(p: DbProfile): CrewMember {
+function profileToCrewMember(p: DbProfile, t: (ns: string, key: string) => string): CrewMember {
   const roleMap: Record<string, CrewRole> = {
     "摄影师": "摄影",
     "灯光师": "灯光",
@@ -34,9 +35,9 @@ function profileToCrewMember(p: DbProfile): CrewMember {
     ].filter(Boolean),
     coverImage: "",
     avatarUrl: getAvatarUrl(p),
-    location: p.location || "未设置",
-    university: p.university || "未设置",
-    bio: p.bio || "这个人很懒，什么都没写",
+    location: p.location || t("common", "notSet"),
+    university: p.university || t("common", "notSet"),
+    bio: p.bio || t("common", "lazyBio"),
     works: [],
     creditScore: {
       overall: p.credit_score ?? 80,
@@ -53,6 +54,7 @@ function profileToCrewMember(p: DbProfile): CrewMember {
 }
 
 export default function FindCrewPage() {
+  const { t } = useLanguage();
   const [filters, setFilters] = useState<CrewFilters>({
     role: null,
     style: null,
@@ -65,7 +67,7 @@ export default function FindCrewPage() {
   useEffect(() => {
     const load = async () => {
       const profiles = await fetchAllProfiles();
-      setRealUsers(profiles.map(profileToCrewMember));
+      setRealUsers(profiles.map(p => profileToCrewMember(p, t)));
       setLoadingUsers(false);
     };
     load();
@@ -98,7 +100,7 @@ export default function FindCrewPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="text-4xl font-extrabold text-white md:text-5xl"
         >
-          招募创作伙伴
+          {t("findCrew", "title")}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -106,10 +108,10 @@ export default function FindCrewPage() {
           transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
           className="mt-3 text-lg text-neutral-400"
         >
-          找到适合你项目的创作伙伴
+          {t("findCrew", "subtitle")}
           {realUsers.length > 0 && (
             <span className="ml-2 text-[#5CC8D6]">
-              · {realUsers.length} 位真实用户已注册
+              · {realUsers.length} {t("findCrew", "registeredHint")}
             </span>
           )}
         </motion.p>
@@ -131,7 +133,7 @@ export default function FindCrewPage() {
           transition={{ duration: 0.4, delay: 0.3 }}
           className="mt-6 text-sm text-neutral-500"
         >
-          {loadingUsers ? "加载中..." : `找到 ${filteredCrew.length} 位创作者`}
+          {loadingUsers ? t("common", "loading") : `${t("findCrew", "found")}${filteredCrew.length} ${t("findCrew", "creators")}`}
         </motion.p>
 
         {/* 真实用户区域 */}
@@ -144,7 +146,7 @@ export default function FindCrewPage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-sm font-medium text-emerald-400">注册用户</span>
+              <span className="text-sm font-medium text-emerald-400">{t("common", "registeredUser")}</span>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {realUsers.map((user) => (
@@ -167,8 +169,8 @@ export default function FindCrewPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <Shield className="h-3 w-3 text-amber-400" />
-                      <span className="text-xs text-amber-400">{user.creditScore.overall}分</span>
-                      {user.location !== "未设置" && (
+                      <span className="text-xs text-amber-400">{user.creditScore.overall}{t("common", "score")}</span>
+                      {user.location !== t("common", "notSet") && (
                         <>
                           <MapPin className="h-3 w-3 text-neutral-500" />
                           <span className="text-xs text-neutral-500">{user.location}</span>
@@ -183,7 +185,7 @@ export default function FindCrewPage() {
             {/* 分割线 */}
             <div className="mt-8 mb-2 flex items-center gap-4">
               <div className="flex-1 h-px bg-white/10" />
-              <span className="text-xs text-neutral-500">示例创作者</span>
+              <span className="text-xs text-neutral-500">{t("findCrew", "sampleCreators")}</span>
               <div className="flex-1 h-px bg-white/10" />
             </div>
           </motion.div>
@@ -209,8 +211,8 @@ export default function FindCrewPage() {
 
         {filteredCrew.length === 0 && !loadingUsers && (
           <div className="mt-16 text-center text-neutral-500">
-            <p className="text-lg">没有找到符合条件的创作者</p>
-            <p className="mt-2 text-sm">试试调整筛选条件</p>
+            <p className="text-lg">{t("findCrew", "noResults")}</p>
+            <p className="mt-2 text-sm">{t("findCrew", "tryAdjust")}</p>
           </div>
         )}
       </div>

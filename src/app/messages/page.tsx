@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PageBackground from "@/components/PageBackground";
 import RealMessagePanel from "@/components/RealMessagePanel";
 import {
@@ -17,6 +18,7 @@ import {
 
 export default function MessagesPage() {
   const { user, session, loading } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [conversations, setConversations] = useState<ConversationPreview[]>([]);
   const [loadingConv, setLoadingConv] = useState(true);
@@ -56,7 +58,7 @@ export default function MessagesPage() {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
         <PageBackground />
-        <div className="relative z-10 text-white">Loading...</div>
+        <div className="relative z-10 text-white">{t("common", "loadingAlt")}</div>
       </div>
     );
   }
@@ -77,7 +79,7 @@ export default function MessagesPage() {
             className="inline-flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            返回
+            {t("messages", "back")}
           </Link>
         </motion.div>
 
@@ -87,15 +89,15 @@ export default function MessagesPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-extrabold text-white">私信</h1>
-          <p className="mt-2 text-neutral-400">与创作伙伴们的对话</p>
+          <h1 className="text-3xl font-extrabold text-white">{t("messages", "title")}</h1>
+          <p className="mt-2 text-neutral-400">{t("messages", "subtitle")}</p>
         </motion.div>
 
         {/* 对话列表 */}
         {loadingConv ? (
           <div className="text-center py-16">
             <div className="inline-block h-8 w-8 rounded-full border-2 border-[#5CC8D6] border-t-transparent animate-spin" />
-            <p className="mt-3 text-neutral-500">加载中...</p>
+            <p className="mt-3 text-neutral-500">{t("common", "loading")}</p>
           </div>
         ) : conversations.length === 0 ? (
           <motion.div
@@ -106,15 +108,15 @@ export default function MessagesPage() {
             <div className="mx-auto h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
               <MessageCircle className="h-8 w-8 text-neutral-600" />
             </div>
-            <p className="mt-4 text-neutral-400">暂无私信</p>
+            <p className="mt-4 text-neutral-400">{t("messages", "noMessages")}</p>
             <p className="mt-1 text-sm text-neutral-600">
-              去人才库找到感兴趣的创作者，发起对话吧！
+              {t("messages", "emptyHint")}
             </p>
             <Link
               href="/find-crew"
               className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5CC8D6] px-6 py-3 text-sm font-semibold text-[#050505] hover:bg-[#7AD4DF] transition-all"
             >
-              浏览人才库
+              {t("messages", "browseTalent")}
             </Link>
           </motion.div>
         ) : (
